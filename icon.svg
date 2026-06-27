@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b7a5f"/>
+      <stop offset="100%" stop-color="#064d3d"/>
+    </linearGradient>
+    <linearGradient id="star" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e3c177"/>
+      <stop offset="100%" stop-color="#c8a04a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Decorative outer ring -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#e3c177" stroke-width="2" opacity="0.35"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#e3c177" stroke-width="1" opacity="0.25" stroke-dasharray="4 6"/>
+  <!-- 8-point star (Islamic motif) -->
+  <path d="M256 64 L300 180 L416 180 L322 252 L358 368 L256 296 L154 368 L190 252 L96 180 L212 180 Z"
+        fill="url(#star)" opacity="0.95"/>
+  <!-- Inner counter ring -->
+  <circle cx="256" cy="256" r="80" fill="none" stroke="#0a1410" stroke-width="8" opacity="0.4"/>
+  <circle cx="256" cy="256" r="80" fill="none" stroke="#14b88a" stroke-width="8"
+          stroke-dasharray="376" stroke-dashoffset="80" stroke-linecap="round"
+          transform="rotate(-90 256 256)"/>
+  <!-- Center bead -->
+  <circle cx="256" cy="256" r="34" fill="#0a1410" opacity="0.85"/>
+  <circle cx="256" cy="256" r="22" fill="#e3c177"/>
+  <text x="256" y="268" font-family="serif" font-size="36" fill="#0a1410"
+        text-anchor="middle" font-weight="700">١</text>
+</svg>

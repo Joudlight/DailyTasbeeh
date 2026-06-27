@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0b7a5f" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="منصة أذكار وأدعية إسلامية شاملة بمصادر موثوقة من القرآن والسنة — أذكار الصباح والمساء، ما بعد الصلاة، النوم، الاستيقاظ، السفر، المرض، الكرب، الرقية الشرعية، أسماء الله الحسنى، وأكثر من 50 دعاءً مختارًا مصنّفًا حسب الموضوع: المغفرة والتوبة، الهداية، الحماية، الرزق، بر الوالدين، العلم، الصبر والفرج، والجنة والآخرة." />
+  <meta name="keywords" content="أذكار, دعاء, أدعية, تسبيح, أذكار الصباح, أذكار المساء, أسماء الله الحسنى, الرقية الشرعية, دعاء المغفرة, دعاء الرزق, دعاء الهداية, dhikr, adhkar, dua, islamic app, muslim app" />
+  <meta name="author" content="رفيق الذكر" />
+
+  <!-- Canonical & Open Graph -->
+  <link rel="canonical" href="https://joudlight.github.io/DailyTasbeeh/" />
+  <meta property="og:title" content="رفيق الذكر — منصة الأذكار والأدعية الشاملة" />
+  <meta property="og:description" content="منصة أذكار وأدعية سنية شاملة بمصادر موثوقة من القرآن والسنة، مصنّفة ومنظّمة بحسب الموضوع، مع تصميم عصري وإمكانية القراءة دون اتصال." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ar_AR" />
+  <meta property="og:url" content="https://joudlight.github.io/DailyTasbeeh/" />
+  <meta property="og:image" content="https://joudlight.github.io/DailyTasbeeh/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="رفيق الذكر — منصة الأذكار والأدعية الشاملة" />
+  <meta name="twitter:description" content="أذكار وأدعية إسلامية شاملة بمصادر موثوقة — مصنّفة بحسب الموضوع، مع قراءة دون اتصال." />
+  <meta name="twitter:image" content="https://joudlight.github.io/DailyTasbeeh/icon-512.png" />
+
+  <title>رفيق الذكر — منصة الأذكار والأدعية الشاملة</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-64YWKJ1YB7"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-64YWKJ1YB7');
+  </script>
+
+  <!-- Structured data (Schema.org) لتحسين ظهور الموقع في نتائج البحث -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "رفيق الذكر",
+    "alternateName": "Dhikr Companion",
+    "description": "منصة أذكار وأدعية إسلامية شاملة بمصادر موثوقة من القرآن والسنة، مصنّفة ومنظّمة بحسب الموضوع.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "ar",
+    "url": "https://joudlight.github.io/DailyTasbeeh/",
+    "image": "https://joudlight.github.io/DailyTasbeeh/icon-512.png",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+</head>
+<body>
+  <div class="bg-pattern" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <!-- ============ Header ============ -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="36" height="36">
+            <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+            <path d="M24 6 L29 20 L44 22 L33 32 L36 46 L24 38 L12 46 L15 32 L4 22 L19 20 Z" fill="currentColor" opacity="0.85"/>
+            <circle cx="24" cy="24" r="4" fill="var(--bg-primary)"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title" lang="ar">رفيق الذكر</h1>
+          <p class="brand-subtitle">أذكار وأدعية شاملة · مصادر سنية موثوقة</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="shareBtn" aria-label="مشاركة الموقع" title="مشاركة الموقع">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="themeToggle" aria-label="تبديل المظهر" title="الوضع الليلي / النهاري">
+          <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات" title="الإعدادات">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-bar-wrap">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" id="searchInput" placeholder="ابحث في الأذكار — نص، معنى، مصدر..." dir="rtl" />
+        <button class="search-clear" id="searchClear" aria-label="مسح البحث" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats dashboard -->
+    <div class="stats-dashboard" id="statsDashboard">
+      <div class="stat-card">
+        <div class="stat-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statTotalToday">0</div>
+          <div class="stat-label">إجمالي اليوم</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statCompleted">0</div>
+          <div class="stat-label">أذكار مكتملة اليوم</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon streak-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="statStreak">0</div>
+          <div class="stat-label">أيام متتالية</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ Main ============ -->
+  <main class="app-main">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <nav class="cat-nav" aria-label="تصفّح الأقسام">
+        <button class="cat-btn active" data-cat="home">
+          <span class="cat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </span>
+          <span class="cat-label">الرئيسية</span>
+        </button>
+        <button class="cat-btn" data-cat="favorites">
+          <span class="cat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </span>
+          <span class="cat-label">المفضلة</span>
+          <span class="cat-count" id="favCount" hidden>0</span>
+        </button>
+        <button class="cat-btn" data-cat="custom">
+          <span class="cat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </span>
+          <span class="cat-label">أذكاري</span>
+        </button>
+        <button class="cat-btn" data-cat="stats">
+          <span class="cat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </span>
+          <span class="cat-label">الإحصائيات</span>
+        </button>
+
+        <div class="cat-divider" role="separator"></div>
+
+        <div class="cat-section-label">الأقسام</div>
+        <div class="cat-list" id="catList"></div>
+      </nav>
+    </aside>
+
+    <!-- Mobile nav toggle -->
+    <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="فتح القائمة">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- Mobile nav backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" hidden></div>
+
+    <!-- Content area -->
+    <div class="content-area">
+      <!-- Home view -->
+      <section class="view-panel active" id="view-home" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">السلام عليكم ورحمة الله</h2>
+          <p class="section-desc">اختر قسمًا لبدء الأذكار، أو استخدم البحث للعثور على ذكر أو دعاء مخصّص</p>
+        </div>
+        <p class="home-intro-seo">
+          «رفيق الذكر» منصة أذكار وأدعية إسلامية شاملة، تجمع أذكار الصباح والمساء، وما بعد الصلاة، والنوم والاستيقاظ،
+          والسفر، والمرض، والرقية الشرعية، وأسماء الله الحسنى التسعة والتسعين، إضافة إلى أكثر من خمسين دعاءً مختارًا
+          من القرآن الكريم والسنة النبوية، مصنّفة في أقسام موضوعية: المغفرة والتوبة، الهداية والثبات، الحماية والوقاية،
+          الرزق والبركة، بر الوالدين، العلم والحكمة، الصبر والفرج، والجنة والآخرة. جميع الأذكار موثّقة بمصادرها، ويمكن
+          قراءتها دون اتصال بالإنترنت بفضل دعم العمل دون شبكة (PWA).
+        </p>
+        <div class="category-cards" id="categoryCards"></div>
+      </section>
+
+      <!-- Favorites view -->
+      <section class="view-panel" id="view-favorites" role="tabpanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">أذكاري المفضّلة</h2>
+          <p class="section-desc">الأذكار التي وضعت عليها علامة المفضلة للوصول السريع</p>
+        </div>
+        <div class="dhikr-grid" id="favoritesGrid"></div>
+        <div class="empty-state" id="favoritesEmpty" hidden>
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          <h3>لا توجد أذكار مفضّلة بعد</h3>
+          <p>اضغط على أيقونة القلب في أي ذكر لإضافته إلى المفضلة.</p>
+        </div>
+      </section>
+
+      <!-- Custom dhikr view -->
+      <section class="view-panel" id="view-custom" role="tabpanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">أذكاري المخصصة</h2>
+          <p class="section-desc">أنشئ أذكارك الخاصة واحفظها كقوالب قابلة لإعادة الاستخدام</p>
+          <button class="btn btn-primary" id="addCustomBtn">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            <span>إضافة ذكر جديد</span>
+          </button>
+        </div>
+        <div class="dhikr-grid" id="customGrid"></div>
+        <div class="empty-state" id="customEmpty" hidden>
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <h3>لا توجد أذكار مخصصة بعد</h3>
+          <p>أنشئ أول ذكر مخصص لك — اكتب النص العربي وحدد العدد المستهدف واحفظه.</p>
+        </div>
+      </section>
+
+      <!-- Stats view -->
+      <section class="view-panel" id="view-stats" role="tabpanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">إحصائياتي ورحلتي مع الذكر</h2>
+          <p class="section-desc">نظرة شاملة على نشاطك — الإجمالي مدى الحياة، أفضل سلسلة، ونشاط آخر 70 يومًا</p>
+        </div>
+
+        <div class="insight-cards">
+          <div class="insight-card">
+            <div class="insight-value" id="statLifetime">0</div>
+            <div class="insight-label">إجمالي التسبيحات مدى الحياة</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-value" id="statBestStreak">0</div>
+            <div class="insight-label">أفضل سلسلة أيام متتالية</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-value" id="statFreeTasbeeh">0</div>
+            <div class="insight-label">تسبيحات السبحة الحرة</div>
+          </div>
+        </div>
+
+        <div class="stats-block">
+          <h3 class="section-subtitle" lang="ar">نشاط آخر 7 أيام</h3>
+          <div class="week-chart" id="weekChart"></div>
+        </div>
+
+        <div class="stats-block">
+          <h3 class="section-subtitle" lang="ar">سجل النشاط — آخر 70 يومًا</h3>
+          <div class="heatmap-wrap">
+            <div class="heatmap-grid" id="heatmapGrid"></div>
+            <div class="heatmap-legend">
+              <span>أقل</span>
+              <span class="heat-cell level-0"></span>
+              <span class="heat-cell level-1"></span>
+              <span class="heat-cell level-2"></span>
+              <span class="heat-cell level-3"></span>
+              <span class="heat-cell level-4"></span>
+              <span>أكثر</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-block">
+          <h3 class="section-subtitle" lang="ar">تقدّم الأقسام اليوم</h3>
+          <div class="cat-progress-list" id="catProgressList"></div>
+        </div>
+      </section>
+
+      <!-- Category view (dynamic content) -->
+      <section class="view-panel" id="view-category" role="tabpanel" hidden>
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="catViewTitle" lang="ar"></h2>
+            <p class="section-desc" id="catViewDesc"></p>
+          </div>
+          <div class="cat-progress-pill" id="catProgressPill" hidden>
+            <span class="cat-progress-num" id="catProgressNum">0/0</span>
+            <div class="cat-progress-bar"><div class="cat-progress-fill" id="catProgressFill"></div></div>
+          </div>
+        </div>
+        <div class="dhikr-grid" id="categoryGrid"></div>
+      </section>
+
+      <!-- Search results view -->
+      <section class="view-panel" id="view-search" role="tabpanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">نتائج البحث</h2>
+          <p class="section-desc" id="searchResultDesc">ابحث في النص العربي، المعنى، أو المصدر</p>
+        </div>
+        <div class="dhikr-grid" id="searchGrid"></div>
+        <div class="empty-state" id="searchEmpty">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <h3>لا توجد نتائج مطابقة</h3>
+          <p>جرّب كلمات بحث مختلفة أو استخدم جزءًا من النص العربي.</p>
+        </div>
+      </section>
+
+      <!-- Achievements -->
+      <section class="achievements-section">
+        <h2 class="section-title small" lang="ar">الإنجازات</h2>
+        <div class="badges-row" id="badgesRow"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ============ Footer ============ -->
+  <footer class="app-footer">
+    <div class="app-footer-inner">
+      <p class="app-footer-verse" lang="ar">﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾</p>
+      <p class="app-footer-text">
+        رفيق الذكر — منصة أذكار وأدعية إسلامية شاملة، تضم أذكار الصباح والمساء، وما بعد الصلاة، والنوم والاستيقاظ،
+        والسفر، والرقية الشرعية، وأسماء الله الحسنى، وأكثر من خمسين دعاءً مختارًا من القرآن الكريم والسنة النبوية
+        مصنّفًا حسب الموضوع.
+      </p>
+      <p class="app-footer-sources">المصادر: القرآن الكريم، صحيح البخاري ومسلم، سنن أبي داود والترمذي والنسائي وابن ماجه، مع تخريج الألباني رحمه الله.</p>
+      <p class="app-footer-copy">© <span id="footerYear"></span> رفيق الذكر · جميع الأذكار والأدعية لله وحده، نسأل الله القبول</p>
+    </div>
+  </footer>
+
+  <!-- ============ FAB: Free Tasbeeh ============ -->
+  <button class="fab-free" id="freeTasbeehFab" aria-label="السبحة الحرة" title="السبحة الحرة — عدّاد مفتوح">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="5" r="2"/><circle cx="19" cy="10" r="2"/><circle cx="19" cy="17" r="2"/><circle cx="12" cy="21" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="5" cy="10" r="2"/>
+      <path d="M12 7v2M17.5 11.5l-1.5 1.2M17.5 15.5l-1.5-1.2M12 19v-2M6.5 15.5l1.5-1.2M6.5 11.5l1.5 1.2"/>
+    </svg>
+  </button>
+
+  <!-- ============ Focus Overlay ============ -->
+  <div class="focus-overlay" id="focusOverlay" hidden aria-modal="true" role="dialog" aria-label="وضع التركيز"></div>
+
+  <!-- ============ Settings Drawer ============ -->
+  <div class="drawer-overlay" id="drawerOverlay" hidden></div>
+  <aside class="settings-drawer" id="settingsDrawer" aria-hidden="true" aria-label="الإعدادات">
+    <div class="drawer-header">
+      <h2>الإعدادات</h2>
+      <button class="icon-btn" id="closeDrawer" aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="setting-group">
+        <h3>المظهر</h3>
+        <div class="setting-row">
+          <label for="settingTheme">الوضع الليلي</label>
+          <button class="toggle-switch" id="settingTheme" role="switch" aria-checked="false">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+        <div class="setting-row font-size-row">
+          <label>حجم الخط العربي</label>
+          <div class="font-size-group">
+            <button class="font-size-btn" data-scale="small">صغير</button>
+            <button class="font-size-btn" data-scale="medium">متوسط</button>
+            <button class="font-size-btn" data-scale="large">كبير</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h3>تذكير الأذكار</h3>
+        <div class="setting-row">
+          <label for="settingReminders">تفعيل التذكيرات</label>
+          <button class="toggle-switch" id="settingReminders" role="switch" aria-checked="false">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+        <div class="setting-row">
+          <label for="remindMorningTime">تذكير الصباح</label>
+          <input type="time" id="remindMorningTime" class="time-input" />
+        </div>
+        <div class="setting-row">
+          <label for="remindEveningTime">تذكير المساء</label>
+          <input type="time" id="remindEveningTime" class="time-input" />
+        </div>
+        <p class="setting-hint">يعمل التذكير عند فتح التطبيق في المتصفح، ويحتاج إلى إذن الإشعارات.</p>
+      </div>
+
+      <div class="setting-group">
+        <h3>الصوت والاهتزاز</h3>
+        <div class="setting-row">
+          <label for="settingSound">صوت النقر</label>
+          <button class="toggle-switch" id="settingSound" role="switch" aria-checked="false">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+        <div class="setting-row">
+          <label for="settingCompletion">صوت الإكمال</label>
+          <button class="toggle-switch" id="settingCompletion" role="switch" aria-checked="true">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+        <div class="setting-row">
+          <label for="settingVibration">الاهتزاز (الجوال)</label>
+          <button class="toggle-switch" id="settingVibration" role="switch" aria-checked="true">
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h3>النسخ الاحتياطي</h3>
+        <div class="setting-actions">
+          <button class="btn btn-secondary" id="exportBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>تصدير الأذكار</span>
+          </button>
+          <button class="btn btn-secondary" id="importBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span>استيراد الأذكار</span>
+          </button>
+          <input type="file" id="importFile" accept="application/json" hidden />
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h3>إعادة التعيين</h3>
+        <div class="setting-actions">
+          <button class="btn btn-danger" id="resetCountsBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            <span>إعادة تعيين العدّادات</span>
+          </button>
+          <button class="btn btn-danger-outline" id="clearDataBtn">
+            <span>مسح جميع البيانات</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="setting-group about">
+        <p class="about-text">
+          ﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾
+        </p>
+        <p class="about-version">رفيق الذكر — منصة الأذكار الشاملة · الإصدار 3.0</p>
+        <p class="about-sources">المصادر: القرآن الكريم، صحيح البخاري ومسلم، سنن أبي داود والترمذي والنسائي وابن ماجه، مع تخريج الألباني رحمه الله.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Custom Dhikr Modal ============ -->
+  <div class="modal-overlay" id="customModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="customModalTitle">
+      <div class="modal-header">
+        <h2 id="customModalTitle">إنشاء ذكر مخصص</h2>
+        <button class="icon-btn" id="closeCustomModal" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form class="modal-body" id="customForm">
+        <input type="hidden" id="customId" />
+        <div class="form-field">
+          <label for="customArabic">النص العربي</label>
+          <textarea id="customArabic" dir="rtl" lang="ar" placeholder="مثال: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ" rows="3" required></textarea>
+        </div>
+        <div class="form-field">
+          <label for="customLabel">عنوان مساعد (اختياري)</label>
+          <input type="text" id="customLabel" dir="rtl" placeholder="مثال: تسبيح الصباح" />
+        </div>
+        <div class="form-field">
+          <label for="customTarget">العدد المستهدف</label>
+          <input type="number" id="customTarget" min="1" max="100000" value="33" required />
+        </div>
+        <div class="form-field">
+          <label class="checkbox-row">
+            <input type="checkbox" id="customContinue" />
+            <span>السماح بالاستمرار بعد بلوغ الهدف</span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelCustomBtn">إلغاء</button>
+          <button type="submit" class="btn btn-primary">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ Hadith Detail Modal ============ -->
+  <div class="modal-overlay" id="detailModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+      <div class="modal-header">
+        <h2 id="detailModalTitle">تفاصيل الذكر</h2>
+        <button class="icon-btn" id="closeDetailModal" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="detailModalBody"></div>
+    </div>
+  </div>
+
+  <!-- ============ Confirmation Modal ============ -->
+  <div class="modal-overlay" id="confirmModal" hidden>
+    <div class="modal modal-small" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal-header">
+        <h2 id="confirmTitle">تأكيد</h2>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">هل أنت متأكد؟</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="confirmCancel">إلغاء</button>
+          <button class="btn btn-danger" id="confirmOk">تأكيد</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Share Modal ============ -->
+  <div class="modal-overlay" id="shareModal" hidden>
+    <div class="modal modal-share" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+      <div class="modal-header">
+        <h2 id="shareModalTitle">مشاركة رفيق الذكر</h2>
+        <button class="icon-btn" id="closeShareModal" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body share-modal-body">
+        <p class="share-modal-desc">شارك الموقع مع أصدقائك وعائلتك ليستفيدوا من الأذكار والأدعية</p>
+
+        <div class="share-qr-wrap">
+          <div class="share-qr" id="shareQrCode" aria-label="رمز QR لرابط الموقع"></div>
+          <span class="share-qr-hint">امسح الرمز بكاميرا الجوال لفتح الموقع مباشرة</span>
+        </div>
+
+        <div class="share-link-row">
+          <input type="text" id="shareUrlInput" readonly aria-label="رابط الموقع" />
+          <button class="btn btn-secondary" id="copyShareLinkBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>نسخ</span>
+          </button>
+        </div>
+
+        <button class="btn btn-primary share-native-btn" id="nativeShareBtn" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>مشاركة عبر تطبيقات الجهاز</span>
+        </button>
+
+        <div class="share-social-row">
+          <a class="share-social-btn" id="shareWhatsapp" href="#" target="_blank" rel="noopener" aria-label="مشاركة عبر واتساب">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <span>واتساب</span>
+          </a>
+          <a class="share-social-btn" id="shareTelegram" href="#" target="_blank" rel="noopener" aria-label="مشاركة عبر تيليجرام">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span>تيليجرام</span>
+          </a>
+          <a class="share-social-btn" id="shareTwitter" href="#" target="_blank" rel="noopener" aria-label="مشاركة عبر X">
+            <span class="share-social-x" aria-hidden="true">X</span>
+            <span>X</span>
+          </a>
+          <a class="share-social-btn" id="shareFacebook" href="#" target="_blank" rel="noopener" aria-label="مشاركة عبر فيسبوك">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>فيسبوك</span>
+          </a>
+          <a class="share-social-btn" id="shareEmail" href="#" aria-label="مشاركة عبر البريد الإلكتروني">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+            <span>بريد</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Toast Container ============ -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="./data.js"></script>
+  <script src="./qrcode.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

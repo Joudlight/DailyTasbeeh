@@ -1,0 +1,34 @@
+{
+  "name": "رفيق الذكر — منصة الأذكار والأدعية الشاملة",
+  "short_name": "رفيق الذكر",
+  "description": "منصة أذكار وأدعية إسلامية شاملة بمصادر موثوقة — أذكار الصباح والمساء، ما بعد الصلاة، النوم، الاستيقاظ، السفر، المرض، الكرب، الرقية، أسماء الله الحسنى، وأكثر من 50 دعاءً مختارًا مصنّفًا حسب الموضوع.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f6f5f0",
+  "theme_color": "#0b7a5f",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["lifestyle", "religion", "productivity"]
+}

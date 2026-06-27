@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://joudlight.github.io/DailyTasbeeh/sitemap.xml
