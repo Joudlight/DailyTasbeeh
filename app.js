@@ -29,6 +29,7 @@
     completedEver: 'dhikr:completedEver',
     reminders: 'dhikr:reminders',
     favorites: 'dhikr:favorites',
+    productivity: 'dhikr:productivity',
   };
 
   const DEFAULT_SETTINGS = {
@@ -72,6 +73,7 @@
     reminders: { lastMorning: null, lastEvening: null },
     favorites: {}, // { [id]: true }
     namesViewed: {}, // { [name_index]: true } — for the "all_names_read" badge
+    productivity: {}, // { dateKey: { activityId: [{ start: timestamp, end: timestamp? }] } }
   };
 
   function loadState() {
@@ -95,6 +97,7 @@
     state.reminders = state.reminders || { lastMorning: null, lastEvening: null };
     state.favorites = state.favorites || {};
     state.namesViewed = state.namesViewed || {};
+    state.productivity = state.productivity || {};
   }
 
   function saveState(key) {
@@ -122,6 +125,219 @@
   // Use standard international numbers (1, 2, 3...) — NOT Arabic-Indic numerals
   function fmtNum(n) {
     return Number(n).toLocaleString('en-US');
+  }
+
+  const HIJRI_MONTHS = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+  const TUNISIAN_MONTHS = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const ARABIC_WEEKDAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+  function gregorianToHijri(date) {
+    try {
+      const f = new Intl.DateTimeFormat('en-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' });
+      const parts = f.formatToParts(date);
+      let hDay = 0, hMonth = 0, hYear = 0;
+      for (const p of parts) {
+        if (p.type === 'day') hDay = parseInt(p.value, 10);
+        if (p.type === 'month') hMonth = parseInt(p.value, 10);
+        if (p.type === 'year') hYear = parseInt(p.value, 10);
+      }
+      if (hDay && hMonth && hYear) {
+        return { year: hYear, month: hMonth, day: hDay, monthName: HIJRI_MONTHS[hMonth - 1] };
+      }
+    } catch (_) {}
+    const g = new Date(date);
+    let y = g.getFullYear(), m = g.getMonth() + 1, d = g.getDate();
+    if (m <= 2) { y--; m += 12; }
+    const A = Math.floor(y / 100);
+    const B = 2 - A + Math.floor(A / 4);
+    const jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
+    const hijriEpoch = 1948439;
+    const days = Math.round(jd) - hijriEpoch;
+    const hYear = Math.floor((30 * days + 10646) / 10631);
+    const r = days - Math.floor((hYear - 1) * 10631 / 30);
+    const hMonth = Math.min(12, Math.max(1, Math.ceil(r / 29.5)));
+    const hDay = Math.min(30, Math.max(1, Math.floor(r - (hMonth - 1) * 29.5)));
+    return { year: hYear, month: hMonth, day: hDay, monthName: HIJRI_MONTHS[hMonth - 1] };
+  }
+
+  function getHijriDateString(date) {
+    const h = gregorianToHijri(date);
+    return `${h.day} ${h.monthName} ${h.year} هـ`;
+  }
+
+  // Productivity activities
+  const PRODUCTIVITY_ACTIVITIES = [
+    { id: 'quran', label: 'قراءة القرآن', icon: 'book', desc: 'قراءة وتدبر آيات القرآن الكريم' },
+    { id: 'studying', label: 'دراسة', icon: 'book-open', desc: 'طلب العلم الشرعي والدنيوي' },
+    { id: 'dhikr', label: 'ذكر وتسبيح', icon: 'heart', desc: 'الأذكار والاستغفار والتسبيح' },
+    { id: 'prayer', label: 'صلاة', icon: 'moon', desc: 'الصلوات المفروضة والنوافل' },
+    { id: 'charity', label: 'صدقة', icon: 'gift', desc: 'الصدقات والإحسان للآخرين' },
+    { id: 'fasting', label: 'صيام', icon: 'clock', desc: 'صيام التطوع والقضاء' },
+    { id: 'dua', label: 'دعاء', icon: 'pray', desc: 'الدعاء والمناجاة والتضرع' },
+  ];
+  const PRODUCTIVITY_IDS = PRODUCTIVITY_ACTIVITIES.map(a => a.id);
+
+  function productivityTodayKey() {
+    return todayKey();
+  }
+
+  function getProductivitySessions(activityId) {
+    const dayKey = productivityTodayKey();
+    const day = state.productivity[dayKey] || {};
+    return day[activityId] || [];
+  }
+
+  function getProductivityActiveActivity() {
+    const dayKey = productivityTodayKey();
+    const day = state.productivity[dayKey] || {};
+    for (const aid of PRODUCTIVITY_IDS) {
+      const sessions = day[aid] || [];
+      const last = sessions[sessions.length - 1];
+      if (last && last.end == null) return aid;
+    }
+    return null;
+  }
+
+  function startProductivityTimer(activityId) {
+    const active = getProductivityActiveActivity();
+    if (active === activityId) return;
+    if (active) stopProductivityTimer(active);
+    const dayKey = productivityTodayKey();
+    if (!state.productivity[dayKey]) state.productivity[dayKey] = {};
+    if (!state.productivity[dayKey][activityId]) state.productivity[dayKey][activityId] = [];
+    state.productivity[dayKey][activityId].push({ start: Date.now() });
+    saveState('productivity');
+    renderProductivityView();
+  }
+
+  function stopProductivityTimer(activityId) {
+    const dayKey = productivityTodayKey();
+    const day = state.productivity[dayKey] || {};
+    const sessions = day[activityId] || [];
+    const last = sessions[sessions.length - 1];
+    if (last && last.end == null) {
+      last.end = Date.now();
+      saveState('productivity');
+    }
+    renderProductivityView();
+  }
+
+  function toggleProductivityTimer(activityId) {
+    const active = getProductivityActiveActivity();
+    if (active === activityId) {
+      stopProductivityTimer(activityId);
+    } else {
+      startProductivityTimer(activityId);
+    }
+  }
+
+  function formatDuration(ms) {
+    if (ms <= 0) return '00:00';
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) {
+      return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function getActivityTodayTotalMs(activityId) {
+    const sessions = getProductivitySessions(activityId);
+    let total = 0;
+    for (const s of sessions) {
+      if (s.end != null) {
+        total += s.end - s.start;
+      } else {
+        total += Date.now() - s.start;
+      }
+    }
+    return total;
+  }
+
+  function renderProductivityView() {
+    const grid = $('#productivityGrid');
+    if (!grid) return;
+    const activeId = getProductivityActiveActivity();
+    let html = '';
+    for (const act of PRODUCTIVITY_ACTIVITIES) {
+      const isActive = activeId === act.id;
+      const totalMs = getActivityTodayTotalMs(act.id);
+      const sessions = getProductivitySessions(act.id);
+      const sessionCount = sessions.length;
+      html += `<div class="prod-card ${isActive ? 'active' : ''}">
+        <div class="prod-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getProdIconPath(act.icon)}</svg>
+        </div>
+        <div class="prod-info">
+          <div class="prod-label">${escapeHtml(act.label)}</div>
+          <div class="prod-desc">${escapeHtml(act.desc)}</div>
+        </div>
+        <div class="prod-stats">
+          <div class="prod-timer" data-activity="${act.id}">${formatDuration(totalMs)}</div>
+          <div class="prod-sessions">${sessionCount > 0 ? fmtNum(sessionCount) + ' جلسة' : ''}</div>
+        </div>
+        <button class="prod-btn ${isActive ? 'prod-btn-stop' : ''}" data-activity="${act.id}">
+          ${isActive ? 'إيقاف' : 'بدء'}
+        </button>
+      </div>`;
+    }
+    grid.innerHTML = html;
+    grid.querySelectorAll('.prod-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleProductivityTimer(btn.dataset.activity);
+      });
+    });
+  }
+
+  function getProdIconPath(icon) {
+    const icons = {
+      'book': '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+      'book-open': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+      'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+      'moon': '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+      'gift': '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+      'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      'pray': '<path d="M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M12 8v8"/><path d="M8 20v-4h8v4"/>',
+    };
+    return icons[icon] || icons.clock;
+  }
+
+  function updateProductivityTimers() {
+    const activeId = getProductivityActiveActivity();
+    if (!activeId) return;
+    const totalMs = getActivityTodayTotalMs(activeId);
+    const timerEls = document.querySelectorAll('.prod-timer');
+    timerEls.forEach(el => {
+      if (el.dataset.activity === activeId) {
+        el.textContent = formatDuration(totalMs);
+      }
+    });
+  }
+
+  // Start productivity timer tick
+  let prodTickInterval = null;
+  function startProductivityTick() {
+    if (prodTickInterval) clearInterval(prodTickInterval);
+    prodTickInterval = setInterval(updateProductivityTimers, 1000);
+  }
+
+  function updateDates() {
+    const now = new Date();
+    const wd = ARABIC_WEEKDAYS[now.getDay()];
+    const d = now.getDate();
+    const m = now.getMonth();
+    const y = now.getFullYear();
+
+    const tnEl = $('#gregorianDateTunisian');
+    if (tnEl) tnEl.textContent = `${wd} ${d} ${TUNISIAN_MONTHS[m]} ${y}`;
+
+    const gEl = $('#gregorianDate');
+    if (gEl) gEl.textContent = now.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    const hEl = $('#hijriDate');
+    if (hEl) hEl.textContent = getHijriDateString(now);
   }
 
   function showToast(message, type = 'success', duration = 2400) {
@@ -1102,7 +1318,7 @@
 
   function navigateTo(cat) {
     // Determine if this is a top-level view (home/favorites/custom/stats/search) or a category
-    const topViews = ['home', 'favorites', 'custom', 'stats', 'search'];
+    const topViews = ['home', 'favorites', 'custom', 'stats', 'search', 'productivity'];
     const isTopView = topViews.includes(cat);
 
     $$('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
@@ -1121,6 +1337,11 @@
     else if (cat === 'favorites') renderFavoritesGrid();
     else if (cat === 'custom') renderCustomGrid();
     else if (cat === 'stats') renderStatsTab();
+    else if (cat === 'productivity') {
+      if (window.ProductivityApp) {
+        window.ProductivityApp.showDashboard();
+      }
+    }
     else if (!isTopView) renderCategoryView(cat);
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2292,6 +2513,10 @@
     const fabFree = $('#freeTasbeehFab');
     if (fabFree) fabFree.addEventListener('click', () => openFocusOverlay(window.FREE_TASBEEH));
 
+    // Update Hijri/Gregorian dates
+    updateDates();
+    startProductivityTick();
+
     // Footer year
     const footerYear = $('#footerYear');
     if (footerYear) footerYear.textContent = new Date().getFullYear();
@@ -2315,14 +2540,15 @@
       }
     });
 
-    // Re-check streak when day changes
+    // Re-check streak and dates when day changes
     setInterval(() => {
       const tk = todayKey();
       if (state.daily[tk] && state.streak.lastDay !== tk) {
         updateStreak();
         updateStats();
       }
-    }, 60000);
+      updateDates();
+    }, 30000);
 
     checkBadges();
 
@@ -2333,12 +2559,8 @@
       });
     }
 
-    // Prevent double-tap zoom on iOS for counter buttons
-    document.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.counter-center, .read-card, .staged-tap-btn, .name-card, .cat-card')) {
-        e.preventDefault();
-      }
-    }, { passive: false });
+    // Touch handling is done via CSS touch-action: manipulation + click events.
+    // This allows scrolling while preventing double-tap zoom on interactive elements.
   }
 
   // Kick off

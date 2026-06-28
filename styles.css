@@ -75,6 +75,8 @@
 
 [data-theme="dark"] {
   --bg-primary: #0a1410;
+  --rose: #fb7185;
+  --rose-dark: #f43f5e;
   --bg-secondary: #0f1c17;
   --bg-tertiary: #122821;
   --surface: #122821;
@@ -119,6 +121,9 @@ input, textarea, select { font-family: inherit; }
 h1, h2, h3, h4, p { margin: 0; }
 :root { color-scheme: light; }
 [data-theme="dark"] { color-scheme: dark; }
+[data-theme="dark"] .prod-card.active {
+  background: linear-gradient(135deg, rgba(20,184,138,0.12), rgba(20,184,138,0.03));
+}
 :focus-visible { outline: 2px solid var(--emerald-light); outline-offset: 2px; border-radius: 4px; }
 
 /* ---------- Decorative Background ---------- */
@@ -188,6 +193,31 @@ h1, h2, h3, h4, p { margin: 0; }
   color: var(--text-muted);
   letter-spacing: 0.04em;
   margin-top: 2px;
+}
+.header-date-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.header-tunisian-date {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  direction: rtl;
+  white-space: nowrap;
+}
+.header-gregorian-date {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  direction: rtl;
+  white-space: nowrap;
+}
+.header-hijri-date {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  direction: rtl;
+  white-space: nowrap;
 }
 .header-actions { display: flex; gap: var(--sp-2); }
 
@@ -820,6 +850,20 @@ h1, h2, h3, h4, p { margin: 0; }
   100% { transform: scale(1); }
 }
 
+/* ---------- Touch screen optimizations ---------- */
+.touch-optimized, .counter-center, .read-card, .staged-tap-btn,
+.name-card, .cat-card, .mini-btn, .dhikr-mini-btn, .btn,
+.fab-free, .stage-row, .focus-tap {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improve momentum scrolling on content areas */
+.content-area, .sidebar, .drawer-body, .modal-body, .cat-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 /* ---------- No-counter card (e.g., for duas without fixed repetition) ---------- */
 .dhikr-card.no-counter .counter-area {
   padding: var(--sp-3) 0;
@@ -1104,6 +1148,95 @@ h1, h2, h3, h4, p { margin: 0; }
   margin-bottom: var(--sp-2);
 }
 .empty-state p { max-width: 40ch; margin: 0 auto; font-size: 0.9rem; line-height: 1.6; }
+
+/* ---------- Productivity Timer ---------- */
+.productivity-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+.prod-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3) var(--sp-4);
+  transition: all var(--t-fast);
+}
+.prod-card.active {
+  border-color: var(--emerald-light);
+  background: linear-gradient(135deg, var(--emerald-subtle, rgba(5,150,105,0.06)), transparent);
+  box-shadow: 0 0 0 1px var(--emerald-light);
+}
+.prod-icon {
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--emerald);
+  flex-shrink: 0;
+}
+.prod-card.active .prod-icon {
+  background: var(--emerald);
+  color: white;
+}
+.prod-info { flex: 1; min-width: 0; }
+.prod-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+.prod-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prod-stats {
+  text-align: center;
+  flex-shrink: 0;
+}
+.prod-timer {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  direction: ltr;
+  min-width: 5ch;
+}
+.prod-card.active .prod-timer {
+  color: var(--emerald);
+}
+.prod-sessions {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.prod-btn {
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--emerald);
+  background: transparent;
+  color: var(--emerald);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.prod-btn:hover { background: var(--emerald-subtle, rgba(5,150,105,0.08)); }
+.prod-btn-stop {
+  background: var(--rose, #e11d48);
+  border-color: var(--rose, #e11d48);
+  color: white;
+}
+.prod-btn-stop:hover { background: var(--rose-dark, #be123c); }
 
 /* ---------- Achievements ---------- */
 .achievements-section {
