@@ -1478,14 +1478,88 @@ window.getAllAdhkar = function () {
   return all;
 };
 
-/* ============== Free-form tasbeeh (open counter, no fixed target) ============== */
-window.FREE_TASBEEH = {
-  id: 'free_tasbeeh',
-  arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
-  label: 'السبحة الحرة',
-  target: Infinity,
-  continueAfter: true,
-  source: 'تسبيح مفتوح للعدّ الحر',
-  grading: '—',
-  translation: 'تسبيح مفتوح — اضغط دون تحديد لعدد',
-};
+/* ============== Free-form tasbeeh options (open counter, no fixed target) ============== */
+window.FREE_TASBEEH_OPTIONS = [
+  {
+    id: 'free_tasbeeh',
+    arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+    label: 'التسبيح المطلق',
+    target: Infinity,
+    continueAfter: true,
+    source: 'تسبيح مفتوح للعدّ الحر',
+    grading: '—',
+    translation: 'تسبيح مفتوح — اضغط دون تحديد لعدد',
+  },
+  {
+    id: 'free_tasbeeh_1',
+    arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ',
+    label: 'كلمتان خفيفتان',
+    target: Infinity,
+    continueAfter: true,
+    source: 'رواه البخاري ومسلم',
+    grading: 'صحيح',
+    translation: 'كلمتان خفيفتان على اللسان، ثقيلتان في الميزان، حبيبتان إلى الرحمن',
+  },
+  {
+    id: 'free_tasbeeh_2',
+    arabic: 'سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ',
+    label: 'الباقيات الصالحات',
+    target: Infinity,
+    continueAfter: true,
+    source: 'رواه مسلم',
+    grading: 'صحيح',
+    translation: 'الباقيات الصالحات — هن أفضل ما تكلم به العباد',
+  },
+  {
+    id: 'free_tasbeeh_3',
+    arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+    label: 'الحوقلة',
+    target: Infinity,
+    continueAfter: true,
+    source: 'رواه البخاري ومسلم',
+    grading: 'صحيح',
+    translation: 'كنز من كنوز الجنة — من قالها في كل يوم مائة مرة لم يصبه فقر أبدًا',
+  },
+  {
+    id: 'free_tasbeeh_4',
+    arabic: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَاللَّهُ أَكْبَرُ',
+    label: 'بعد صلاة الفريضة',
+    target: Infinity,
+    continueAfter: true,
+    source: 'رواه مسلم',
+    grading: 'صحيح',
+    translation: 'تُقال بعد كل صلاة مكتوبة 33 مرة لكل منها',
+  },
+  {
+    id: 'free_tasbeeh_5',
+    arabic: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ',
+    label: 'الحسبنة',
+    target: Infinity,
+    continueAfter: true,
+    source: 'رواه البخاري',
+    grading: 'صحيح',
+    translation: 'قالها إبراهيم عليه السلام حين ألقي في النار، وقالها محمد ﷺ حين قال الناس إن الناس قد جمعوا لكم',
+  },
+  {
+    id: 'free_tasbeeh_6',
+    arabic: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+    label: 'كلمة التوحيد',
+    target: Infinity,
+    continueAfter: true,
+    source: 'رواه البخاري ومسلم',
+    grading: 'صحيح',
+    translation: 'من قالها في يوم مائة مرة كانت له عدل عشر رقاب، وكتبت له مائة حسنة، ومحيت عنه مائة سيئة',
+  },
+  {
+    id: 'free_tasbeeh_7',
+    arabic: 'لَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ. لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ. لَا إِلَهَ إِلَّا اللَّهُ، وَلَا شَرِيكَ لَهُ. لَا إِلَهَ إِلَّا اللَّهُ، لَهُ الْمُلْكُ، وَلَهُ الْحَمْدُ. لَا إِلَهَ إِلَّا اللَّهُ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+    label: 'تهليل وتكبير',
+    target: Infinity,
+    continueAfter: true,
+    source: 'أذكار متنوعة',
+    grading: '—',
+    translation: 'مجموعة من كلمات التوحيد والتكبير والتحميد',
+  },
+];
+
+window.FREE_TASBEEH = window.FREE_TASBEEH_OPTIONS[0];

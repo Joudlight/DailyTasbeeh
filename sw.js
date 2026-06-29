@@ -3,7 +3,7 @@
    Cache-first strategy for app shell, network-first for data
    ===================================================== */
 
-const CACHE_VERSION = 'dhikr-v3.2.0';
+const CACHE_VERSION = 'dhikr-v3.3.0';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

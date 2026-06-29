@@ -30,6 +30,7 @@
     reminders: 'dhikr:reminders',
     favorites: 'dhikr:favorites',
     timerSessions: 'dhikr:timerSessions',
+    tasks: 'dhikr:tasks',
   };
 
   const DEFAULT_SETTINGS = {
@@ -62,6 +63,8 @@
   ];
   const BADGES_BY_ID = Object.fromEntries(BADGES.map(b => [b.id, b]));
 
+  let freeTasbeehIndex = 0;
+
   let state = {
     counts: {},
     custom: [],
@@ -75,6 +78,7 @@
     favorites: {}, // { [id]: true }
     namesViewed: {}, // { [name_index]: true } — for the "all_names_read" badge
     timerSessions: [], // [{ id, activity, minutes, date, ts }] — productivity timer log
+    tasks: [], // [{ id, title, description, priority, dueDate, category, completed, attachments, createdAt }]
   };
 
   function loadState() {
@@ -99,6 +103,7 @@
     state.favorites = state.favorites || {};
     state.namesViewed = state.namesViewed || {};
     state.timerSessions = Array.isArray(state.timerSessions) ? state.timerSessions : [];
+    state.tasks = Array.isArray(state.tasks) ? state.tasks : [];
   }
 
   function saveState(key) {
@@ -961,8 +966,12 @@
     const totalAllTime = Object.values(state.daily).reduce((a, b) => a + b, 0);
     const lifetimeEl = $('#statLifetime'); if (lifetimeEl) lifetimeEl.textContent = fmtNum(totalAllTime);
     const bestStreakEl = $('#statBestStreak'); if (bestStreakEl) bestStreakEl.textContent = fmtNum(state.streak.best || 0);
+    const freeTotal = (window.FREE_TASBEEH_OPTIONS || []).reduce((sum, opt) => {
+      const c = state.counts[opt.id];
+      return sum + (c ? c.count : 0);
+    }, 0);
     const freeEl = $('#statFreeTasbeeh');
-    if (freeEl) freeEl.textContent = fmtNum((state.counts.free_tasbeeh && state.counts.free_tasbeeh.count) || 0);
+    if (freeEl) freeEl.textContent = fmtNum(freeTotal);
 
     const today = new Date();
 
@@ -1061,8 +1070,11 @@
     // 99 names badge
     if (Object.keys(state.namesViewed).length >= 99) unlock('all_names_read');
 
-    const freeC = state.counts.free_tasbeeh;
-    if (freeC && freeC.count >= 500) unlock('free_500');
+    const freeTotal = (window.FREE_TASBEEH_OPTIONS || []).reduce((sum, opt) => {
+      const c = state.counts[opt.id];
+      return sum + (c ? c.count : 0);
+    }, 0);
+    if (freeTotal >= 500) unlock('free_500');
 
     if (newUnlocks.length) {
       saveState('badges');
@@ -1106,7 +1118,7 @@
 
   function navigateTo(cat) {
     // Determine if this is a top-level view (home/favorites/custom/stats/timer/calendar/search) or a category
-    const topViews = ['home', 'favorites', 'custom', 'stats', 'timer', 'calendar', 'search'];
+    const topViews = ['home', 'favorites', 'custom', 'stats', 'timer', 'calendar', 'tasks', 'search'];
     const isTopView = topViews.includes(cat);
 
     $$('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
@@ -1115,7 +1127,6 @@
       if (isTopView) {
         isActive = panel.id === `view-${cat}`;
       } else {
-        // All category IDs map to the single view-category panel
         isActive = panel.id === 'view-category';
       }
       panel.classList.toggle('active', isActive);
@@ -1127,6 +1138,7 @@
     else if (cat === 'stats') renderStatsTab();
     else if (cat === 'timer') renderTimerTab();
     else if (cat === 'calendar') renderCalendarTab();
+    else if (cat === 'tasks') renderTasksTab();
     else if (!isTopView) renderCategoryView(cat);
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1773,6 +1785,7 @@
           favorites: {},
           namesViewed: {},
           timerSessions: [],
+          tasks: [],
         };
         resetTimerHard();
         applyTheme(state.settings.theme);
@@ -2123,7 +2136,12 @@
   function openFocusOverlay(dhikr) {
     const overlay = $('#focusOverlay');
     if (!overlay) return;
-    const isFree = dhikr.id === 'free_tasbeeh';
+
+    // Find the index if it's a free tasbeeh option
+    const isFree = dhikr.id === 'free_tasbeeh' || (dhikr.id && dhikr.id.startsWith('free_tasbeeh'));
+    const freeIdx = window.FREE_TASBEEH_OPTIONS.findIndex(o => o.id === dhikr.id);
+    if (freeIdx >= 0) freeTasbeehIndex = freeIdx;
+
     const c = getCount(dhikr.id);
     const target = dhikr.target;
     const isInfinite = !isFinite(target);
@@ -2139,8 +2157,20 @@
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-      ${dhikr.label ? `<span class="dhikr-label focus-tag" lang="ar">${escapeHtml(dhikr.label)}</span>` : ''}
+      <div class="focus-nav-row">
+        <button class="focus-nav-btn" id="focusPrevBtn" aria-label="الذكر السابق" title="السابق">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="focus-label-wrap">
+          ${dhikr.label ? `<span class="dhikr-label focus-tag" lang="ar">${escapeHtml(dhikr.label)}</span>` : ''}
+          <span class="focus-counter-hint">${freeIdx >= 0 ? `${freeIdx + 1} / ${window.FREE_TASBEEH_OPTIONS.length}` : ''}</span>
+        </div>
+        <button class="focus-nav-btn" id="focusNextBtn" aria-label="الذكر التالي" title="التالي">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
       ${dhikr.arabic ? `<div class="dhikr-arabic focus-arabic" lang="ar" dir="rtl">${escapeHtml(dhikr.arabic)}</div>` : `<div class="dhikr-arabic focus-arabic" lang="ar" dir="rtl">سُبْحَانَ اللَّهِ وَبِحَمْدِهِ</div>`}
+      ${dhikr.translation ? `<div class="dhikr-translation focus-translation">${escapeHtml(dhikr.translation)}</div>` : ''}
       <div class="counter-area">
         <div class="counter-wrapper focus-wrapper${isCompleted ? ' completed' : ''}">
           <svg class="counter-ring" viewBox="0 0 200 200" ${isInfinite ? 'style="opacity:0"' : ''}>
@@ -2175,7 +2205,7 @@
           <span>تصفير</span>
         </button>
       </div>
-      <p class="focus-hint">اضغط داخل الدائرة للتسبيح، أو استخدم مفتاح المسافة</p>
+      <p class="focus-hint">اضغط للتسبيح أو استخدم ← → للتنقل بين الأذكار</p>
     `;
 
     const tapEl = overlay.querySelector('.focus-tap');
@@ -2195,17 +2225,32 @@
     });
     $('#focusCloseBtn').addEventListener('click', closeFocusOverlay);
 
+    // Navigation buttons
+    $('#focusPrevBtn').addEventListener('click', () => cycleFreeTasbeeh(-1));
+    $('#focusNextBtn').addEventListener('click', () => cycleFreeTasbeeh(1));
+
     overlay.hidden = false;
     requestAnimationFrame(() => overlay.classList.add('show'));
     document.body.style.overflow = 'hidden';
     setTimeout(() => tapEl.focus(), 200);
   }
 
+  function cycleFreeTasbeeh(direction) {
+    const opts = window.FREE_TASBEEH_OPTIONS;
+    freeTasbeehIndex = (freeTasbeehIndex + direction + opts.length) % opts.length;
+    const dhikr = opts[freeTasbeehIndex];
+    const overlay = $('#focusOverlay');
+    if (overlay && !overlay.hidden) {
+      openFocusOverlay(dhikr);
+    }
+  }
+
   function onOverlayTap(dhikr) {
     const overlay = $('#focusOverlay');
     if (!overlay) return;
+    const isFree = dhikr.id === 'free_tasbeeh' || (dhikr.id && dhikr.id.startsWith('free_tasbeeh'));
     handleTap(dhikr, overlay);
-    if (dhikr.id === 'free_tasbeeh') {
+    if (isFree) {
       const c = getCount(dhikr.id);
       updateFreeLap(overlay);
       if (c.count > 0 && c.count % 33 === 0) {
@@ -2218,7 +2263,8 @@
   }
 
   function updateFreeLap(overlay) {
-    const c = getCount('free_tasbeeh');
+    const dhikrId = overlay.dataset.dhikrId;
+    const c = getCount(dhikrId);
     const lapEl = overlay.querySelector('.lap-count');
     if (lapEl) lapEl.textContent = fmtNum(Math.floor(c.count / 33));
     const countEl = overlay.querySelector('.count-value');
@@ -2306,14 +2352,29 @@
     return hijriToJDN(nextYear, nextMonth, 1) - hijriToJDN(year, month, 1);
   }
 
-  // Significant, broadly-agreed-upon Hijri dates (no disputed observances)
+  // Comprehensive Islamic dates and occasions
   function getIslamicEvent(y, m, d) {
-    if (m === 1 && d === 1) return `رأس السنة الهجرية ${y}هـ`;
-    if (m === 1 && d === 10) return 'يوم عاشوراء';
-    if (m === 9 && d === 1) return 'بداية شهر رمضان المبارك';
-    if (m === 10 && d === 1) return 'عيد الفطر المبارك';
-    if (m === 12 && d === 9) return 'يوم عرفة';
-    if (m === 12 && d === 10) return 'عيد الأضحى المبارك';
+    if (m === 1 && d === 1) return `رأس السنة الهجرية ${y}هـ — بداية عام جديد`;
+    if (m === 1 && d === 9) return 'تاسوعاء — يُستحب صيامه';
+    if (m === 1 && d === 10) return 'يوم عاشوراء — صيامه يكفر السنة الماضية';
+    if (m === 3 && d === 12) return 'المولد النبوي الشريف — ميلاد النبي ﷺ';
+    if (m === 7 && d === 27) return 'الإسراء والمعراج — رحلة النبي ﷺ';
+    if (m === 8 && d === 15) return 'ليلة النصف من شعبان — ليلة مباركة';
+    if (m === 9 && d === 1) return 'بداية شهر رمضان المبارك — شهر الصيام والقيام';
+    if (m === 9 && d === 10) return 'العشر الأواخر من رمضان — التماس ليلة القدر';
+    if (m === 9 && d === 21) return 'ليلة 21 رمضان — إحدى ليالي العشر الأواخر';
+    if (m === 9 && d === 27) return 'ليلة 27 رمضان — ترجى فيها ليلة القدر';
+    if (m === 9 && d === 29) return 'تحرّ ليلة القدر—التمسوها في العشر الأواخر';
+    if (m === 10 && d === 1) return 'عيد الفطر المبارك — أول أيام العيد';
+    if (m === 10 && d === 2) return 'ثاني أيام عيد الفطر المبارك';
+    if (m === 10 && d === 3) return 'ثالث أيام عيد الفطر المبارك';
+    if (m === 12 && d === 8) return 'يوم التروية — أول أيام الحج';
+    if (m === 12 && d === 9) return 'يوم عرفة — أفضل يوم طلعت فيه الشمس — صيامه يكفر سنتين';
+    if (m === 12 && d === 10) return 'عيد الأضحى المبارك — يوم النحر';
+    if (m === 12 && d === 11) return 'أيام التشريق — أول أيام التشريق';
+    if (m === 12 && d === 12) return 'أيام التشريق — ثاني أيام التشريق';
+    if (m === 12 && d === 13) return 'أيام التشريق — ثالث أيام التشريق';
+    if (m === 12 && d === 10) return 'عيد الأضحى المبارك — أول أيام العيد';
     return null;
   }
 
@@ -2391,7 +2452,7 @@
         const isWeekend = weekday === 5 || weekday === 6;
         const event = getIslamicEvent(h.year, h.month, h.day);
         const subLabel = h.day === 1 ? `${HIJRI_MONTHS[h.month - 1]}` : h.day;
-        cellsHtml += `<div class="cal-cell${isToday ? ' is-today' : ''}${isWeekend ? ' is-weekend' : ''}${event ? ' has-event' : ''}"${event ? ` title="${escapeHtml(event)}"` : ''}>
+        cellsHtml += `<div class="cal-cell${isToday ? ' is-today' : ''}${isWeekend ? ' is-weekend' : ''}${event ? ' has-event' : ''}"${event ? ` title="${escapeHtml(event)}"` : ''} data-day="${d}" data-month="${month}" data-year="${year}">
           <span class="cal-day-main">${d}</span>
           <span class="cal-day-sub">${subLabel}</span>
         </div>`;
@@ -2410,7 +2471,7 @@
         const weekday = gDate.getDay();
         const isWeekend = weekday === 5 || weekday === 6;
         const event = getIslamicEvent(hYear, hMonth, d);
-        cellsHtml += `<div class="cal-cell${isToday ? ' is-today' : ''}${isWeekend ? ' is-weekend' : ''}${event ? ' has-event' : ''}"${event ? ` title="${escapeHtml(event)}"` : ''}>
+        cellsHtml += `<div class="cal-cell${isToday ? ' is-today' : ''}${isWeekend ? ' is-weekend' : ''}${event ? ' has-event' : ''}"${event ? ` title="${escapeHtml(event)}"` : ''} data-day="${gDate.getDate()}" data-month="${gDate.getMonth()}" data-year="${gDate.getFullYear()}">
           <span class="cal-day-main">${d}</span>
           <span class="cal-day-sub">${gDate.getDate()}/${gDate.getMonth() + 1}</span>
         </div>`;
@@ -2418,6 +2479,7 @@
       label.textContent = `${HIJRI_MONTHS[hMonth - 1]} ${hYear}هـ`;
     }
     grid.innerHTML = cellsHtml;
+    renderTaskCalendarOverlay();
   }
 
   function renderCalendarTab() {
@@ -2465,7 +2527,334 @@
   }
 
   // ===================================================
-  // 24. Productivity timer (Quran reading / study / focus)
+  // 24. Tasks / Notes Manager
+  // ===================================================
+
+  function renderTasksTab() {
+    const list = $('#tasksList');
+    if (!list) return;
+
+    const tasks = state.tasks || [];
+    const priorityFilter = $('#tasksFilterPriority')?.value || 'all';
+    const statusFilter = $('#tasksFilterStatus')?.value || 'all';
+
+    let filtered = tasks;
+    if (priorityFilter !== 'all') filtered = filtered.filter(t => t.priority === priorityFilter);
+    if (statusFilter === 'pending') filtered = filtered.filter(t => !t.completed);
+    else if (statusFilter === 'completed') filtered = filtered.filter(t => t.completed);
+
+    // Sort: pending first, then by due date, then by priority
+    const priorityWeight = { high: 0, medium: 1, low: 2 };
+    filtered.sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return (priorityWeight[a.priority] || 1) - (priorityWeight[b.priority] || 1);
+    });
+
+    const empty = $('#tasksEmpty');
+    if (filtered.length === 0) {
+      list.innerHTML = '';
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    list.innerHTML = filtered.map(task => {
+      const prioClass = task.priority === 'high' ? 'task-prio-high' : task.priority === 'medium' ? 'task-prio-medium' : 'task-prio-low';
+      const prioLabel = task.priority === 'high' ? 'عالية' : task.priority === 'medium' ? 'متوسطة' : 'منخفضة';
+      const dueLabel = task.dueDate ? formatDateForDisplay(task.dueDate) : '';
+      const isOverdue = task.dueDate && !task.completed && isPastDue(task.dueDate);
+      return `<div class="task-card ${task.completed ? 'task-completed' : ''} ${isOverdue ? 'task-overdue' : ''}" data-task-id="${escapeHtml(task.id)}">
+        <button class="task-check" data-action="toggle" aria-label="${task.completed ? 'إعادة فتح' : 'إكمال المهمة'}">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            ${task.completed ? '<polyline points="20 6 9 17 4 12"/>' : '<circle cx="12" cy="12" r="10"/>'}
+          </svg>
+        </button>
+        <div class="task-body">
+          <div class="task-title">${escapeHtml(task.title)}</div>
+          ${task.description ? `<div class="task-desc">${escapeHtml(task.description)}</div>` : ''}
+          <div class="task-meta">
+            <span class="task-prio ${prioClass}">${prioLabel}</span>
+            <span class="task-cat">${getTaskCategoryLabel(task.category)}</span>
+            ${dueLabel ? `<span class="task-due ${isOverdue ? 'task-due-overdue' : ''}">📅 ${escapeHtml(dueLabel)}</span>` : ''}
+            ${task.attachments && task.attachments.length ? `<button class="task-attach-btn" data-action="preview-attachment" title="عرض المرفق">📎 ${task.attachments.length}</button>` : ''}
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="dhikr-mini-btn" data-action="edit" aria-label="تعديل المهمة" title="تعديل">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="dhikr-mini-btn" data-action="delete" aria-label="حذف المهمة" title="حذف">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Wire task click handlers
+    list.querySelectorAll('.task-card').forEach(card => {
+      const id = card.dataset.taskId;
+      card.querySelector('[data-action="toggle"]')?.addEventListener('click', () => toggleTaskComplete(id));
+      card.querySelector('[data-action="edit"]')?.addEventListener('click', () => openTaskModal(id));
+      card.querySelector('[data-action="delete"]')?.addEventListener('click', () => {
+        showConfirm('سيتم حذف هذه المهمة نهائيًا. هل أنت متأكد؟', () => deleteTask(id));
+      });
+      card.querySelector('[data-action="preview-attachment"]')?.addEventListener('click', () => previewTaskAttachment(id));
+    });
+  }
+
+  function setupTasksTab() {
+    const modal = $('#taskModal');
+    const form = $('#taskForm');
+    if (!form) return;
+
+    $('#addTaskBtn')?.addEventListener('click', () => openTaskModal(null));
+    $('#closeTaskModal')?.addEventListener('click', () => closeModal(modal));
+    $('#cancelTaskBtn')?.addEventListener('click', () => closeModal(modal));
+    $('#taskAttachmentRemove')?.addEventListener('click', () => {
+      $('#taskAttachment').value = '';
+      $('#taskAttachmentPreview').hidden = true;
+    });
+    $('#tasksFilterPriority')?.addEventListener('change', renderTasksTab);
+    $('#tasksFilterStatus')?.addEventListener('change', renderTasksTab);
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal(modal);
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveTaskFromForm();
+    });
+
+    // Task preview modal
+    const previewModal = $('#taskPreviewModal');
+    $('#closeTaskPreviewModal')?.addEventListener('click', () => closeModal(previewModal));
+    previewModal?.addEventListener('click', (e) => {
+      if (e.target === previewModal) closeModal(previewModal);
+    });
+  }
+
+  function openTaskModal(taskId) {
+    const modal = $('#taskModal');
+    const titleEl = $('#taskModalTitle');
+    const idEl = $('#taskId');
+    const titleInput = $('#taskTitle');
+    const descInput = $('#taskDescription');
+    const priorityInput = $('#taskPriority');
+    const categoryInput = $('#taskCategory');
+    const dueDateInput = $('#taskDueDate');
+    const attachmentInput = $('#taskAttachment');
+    const preview = $('#taskAttachmentPreview');
+
+    if (taskId) {
+      const task = state.tasks.find(t => t.id === taskId);
+      if (!task) return;
+      titleEl.textContent = 'تعديل المهمة';
+      idEl.value = task.id;
+      titleInput.value = task.title;
+      descInput.value = task.description || '';
+      priorityInput.value = task.priority || 'medium';
+      categoryInput.value = task.category || 'general';
+      dueDateInput.value = task.dueDate || '';
+      if (task.attachments && task.attachments.length) {
+        preview.hidden = false;
+        $('#taskAttachmentName').textContent = task.attachments[0].name;
+      } else {
+        preview.hidden = true;
+      }
+    } else {
+      titleEl.textContent = 'إضافة مهمة جديدة';
+      idEl.value = '';
+      titleInput.value = '';
+      descInput.value = '';
+      priorityInput.value = 'medium';
+      categoryInput.value = 'general';
+      dueDateInput.value = '';
+      attachmentInput.value = '';
+      preview.hidden = true;
+    }
+
+    showModal(modal);
+  }
+
+  function saveTaskFromForm() {
+    const taskId = $('#taskId').value;
+    const title = $('#taskTitle').value.trim();
+    const description = $('#taskDescription').value.trim();
+    const priority = $('#taskPriority').value;
+    const category = $('#taskCategory').value;
+    const dueDate = $('#taskDueDate').value;
+
+    if (!title) { showToast('يرجى إدخال عنوان المهمة', 'error'); return; }
+
+    const fileInput = $('#taskAttachment');
+    const existingTask = taskId ? state.tasks.find(t => t.id === taskId) : null;
+
+    const saveTaskData = (attachments) => {
+      if (taskId && existingTask) {
+        existingTask.title = title;
+        existingTask.description = description;
+        existingTask.priority = priority;
+        existingTask.category = category;
+        existingTask.dueDate = dueDate;
+        existingTask.attachments = attachments || existingTask.attachments;
+      } else {
+        state.tasks.push({
+          id: 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+          title,
+          description,
+          priority,
+          category,
+          dueDate,
+          completed: false,
+          attachments: attachments || [],
+          createdAt: new Date().toISOString(),
+        });
+      }
+      saveState('tasks');
+      closeModal($('#taskModal'));
+      renderTasksTab();
+      showToast(taskId ? 'تم تحديث المهمة' : 'تمت إضافة المهمة', 'success', 1500);
+    };
+
+    if (fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('الملف كبير جدًا. الحد الأقصى 2 ميجابايت.', 'error', 3000);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        saveTaskData([{ name: file.name, type: file.type, size: file.size, data: e.target.result }]);
+      };
+      reader.onerror = () => {
+        showToast('فشل قراءة الملف', 'error');
+        saveTaskData(null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      saveTaskData(null);
+    }
+  }
+
+  function toggleTaskComplete(id) {
+    const task = state.tasks.find(t => t.id === id);
+    if (!task) return;
+    task.completed = !task.completed;
+    saveState('tasks');
+    renderTasksTab();
+  }
+
+  function deleteTask(id) {
+    state.tasks = state.tasks.filter(t => t.id !== id);
+    saveState('tasks');
+    renderTasksTab();
+  }
+
+  function previewTaskAttachment(id) {
+    const task = state.tasks.find(t => t.id === id);
+    if (!task || !task.attachments || !task.attachments.length) return;
+
+    const att = task.attachments[0];
+    const modal = $('#taskPreviewModal');
+    const titleEl = $('#taskPreviewTitle');
+    const bodyEl = $('#taskPreviewBody');
+    if (!modal || !bodyEl) return;
+
+    titleEl.textContent = att.name;
+    const isImage = att.type && att.type.startsWith('image/');
+    const isPdf = att.type === 'application/pdf' || att.name?.toLowerCase().endsWith('.pdf');
+
+    if (isImage) {
+      bodyEl.innerHTML = `<img src="${att.data}" alt="${escapeHtml(att.name)}" class="task-preview-img" />`;
+    } else if (isPdf) {
+      bodyEl.innerHTML = `<embed src="${att.data}" type="application/pdf" class="task-preview-pdf" />`;
+    } else {
+      bodyEl.innerHTML = `
+        <div class="task-preview-file">
+          <div class="task-preview-file-icon">📄</div>
+          <div class="task-preview-file-name">${escapeHtml(att.name)}</div>
+          <div class="task-preview-file-size">${(att.size / 1024).toFixed(1)} KB</div>
+          <div class="task-preview-file-type">${escapeHtml(att.type || 'غير معروف')}</div>
+          <a href="${att.data}" download="${escapeHtml(att.name)}" class="btn btn-primary" style="margin-top:var(--sp-3)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>تحميل الملف</span>
+          </a>
+        </div>`;
+    }
+
+    showModal(modal);
+  }
+
+  function getTaskCategoryLabel(cat) {
+    const labels = {
+      general: 'عام', work: 'عمل', study: 'دراسة', personal: 'شخصي',
+      health: 'صحة', finance: 'مالية', religious: 'ديني', family: 'عائلة', other: 'أخرى',
+    };
+    return labels[cat] || cat || 'عام';
+  }
+
+  function formatDateForDisplay(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  function isPastDue(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr + 'T23:59:59');
+    return d < new Date();
+  }
+
+  function getTasksDueOnDate(dateStr) {
+    return (state.tasks || []).filter(t => t.dueDate === dateStr && !t.completed);
+  }
+
+  // Add task indicators to calendar
+  function renderTaskCalendarOverlay() {
+    const taskDots = $$('.cal-task-indicator');
+    taskDots.forEach(d => d.remove());
+
+    const tasks = state.tasks || [];
+    tasks.forEach(t => {
+      if (!t.dueDate || t.completed) return;
+      const parts = t.dueDate.split('-');
+      // For each visible day cell in the calendar
+      const dayNum = parseInt(parts[2], 10);
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const yearVal = parseInt(parts[0], 10);
+
+      $$('.cal-cell:not(.empty)').forEach(cell => {
+        const cellDay = cell.dataset.day;
+        const cellMonth = cell.dataset.month;
+        const cellYear = cell.dataset.year;
+        if (!cellDay || !cellMonth || !cellYear) return;
+        if (parseInt(cellDay, 10) === dayNum && parseInt(cellMonth, 10) === monthIdx && parseInt(cellYear, 10) === yearVal) {
+          const existing = cell.querySelector('.cal-task-indicator');
+          if (existing) {
+            existing.style.display = 'block';
+          } else {
+            const dot = document.createElement('span');
+            dot.className = 'cal-task-indicator';
+            dot.title = `📌 ${t.title}`;
+            cell.appendChild(dot);
+          }
+        }
+      });
+    });
+  }
+
+  // ===================================================
+  // 25. Productivity timer (Quran reading / study / focus)
   // ===================================================
   const TIMER_ACTIVITIES = [
     { id: 'quran', label: 'تلاوة القرآن', icon: 'quran' },
@@ -2772,6 +3161,7 @@
       else if (viewId === 'view-custom') renderCustomGrid();
       else if (viewId === 'view-timer') renderTimerTab();
       else if (viewId === 'view-calendar') renderCalendarTab();
+      else if (viewId === 'view-tasks') renderTasksTab();
       else if (viewId === 'view-search') {
         const q = $('#searchInput').value.trim();
         if (q) runSearch(q);
@@ -2802,6 +3192,7 @@
     setupReminders();
     setupTimerTab();
     setupCalendarTab();
+    setupTasksTab();
 
     renderHomeView();
     updateStats();
@@ -2811,20 +3202,42 @@
 
     // Free-form tasbeeh FAB
     const fabFree = $('#freeTasbeehFab');
-    if (fabFree) fabFree.addEventListener('click', () => openFocusOverlay(window.FREE_TASBEEH));
+    if (fabFree) fabFree.addEventListener('click', () => { freeTasbeehIndex = 0; openFocusOverlay(window.FREE_TASBEEH_OPTIONS[0]); });
 
     // Footer year
     const footerYear = $('#footerYear');
     if (footerYear) footerYear.textContent = new Date().getFullYear();
 
-    // Close focus overlay with Escape
+  // Close focus overlay with Escape
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const overlay = $('#focusOverlay');
-        if (overlay && !overlay.hidden) {
+      // Focus overlay: prev/next with arrow keys
+      const overlay = $('#focusOverlay');
+      if (overlay && !overlay.hidden) {
+        if (e.key === 'Escape') {
           closeFocusOverlay();
           return;
         }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          cycleFreeTasbeeh(1);
+          return;
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          cycleFreeTasbeeh(-1);
+          return;
+        }
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          const dhikr = window.FREE_TASBEEH_OPTIONS[freeTasbeehIndex];
+          if (dhikr) {
+            onOverlayTap(dhikr);
+          }
+          return;
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
         const detailModal = $('#detailModal');
         if (detailModal && !detailModal.hidden) { closeModal(detailModal); return; }
         const customModal = $('#customModal');

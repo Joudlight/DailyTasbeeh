@@ -215,6 +215,14 @@
           </span>
           <span class="cat-label">التقويم</span>
         </button>
+        <button class="cat-btn" data-cat="tasks">
+          <span class="cat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </span>
+          <span class="cat-label">المهام</span>
+        </button>
 
         <div class="cat-divider" role="separator"></div>
 
@@ -445,6 +453,42 @@
               <button type="button" data-adj="1" aria-label="زيادة يوم">+</button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Tasks view -->
+      <section class="view-panel" id="view-tasks" role="tabpanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">إدارة المهام</h2>
+          <p class="section-desc">تابع مهامك وأعمالك، مع تحديد الأولويات والمواعيد النهائية</p>
+        </div>
+        <div class="tasks-toolbar">
+          <button class="btn btn-primary" id="addTaskBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>إضافة مهمة</span>
+          </button>
+          <div class="tasks-filter-group">
+            <select id="tasksFilterPriority" aria-label="تصفية حسب الأولوية">
+              <option value="all">جميع المهام</option>
+              <option value="high">عالية</option>
+              <option value="medium">متوسطة</option>
+              <option value="low">منخفضة</option>
+            </select>
+            <select id="tasksFilterStatus" aria-label="تصفية حسب الحالة">
+              <option value="all">الكل</option>
+              <option value="pending">قيد الانتظار</option>
+              <option value="completed">مكتملة</option>
+            </select>
+          </div>
+        </div>
+        <div class="tasks-list" id="tasksList"></div>
+        <div class="empty-state" id="tasksEmpty" hidden>
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <p>لا توجد مهام بعد. أضف مهمة جديدة للبدء.</p>
         </div>
       </section>
 
@@ -755,6 +799,86 @@
           </a>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ============ Task Modal ============ -->
+  <div class="modal-overlay" id="taskModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+      <div class="modal-header">
+        <h2 id="taskModalTitle">إضافة مهمة جديدة</h2>
+        <button class="icon-btn" id="closeTaskModal" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form class="modal-body" id="taskForm">
+        <input type="hidden" id="taskId" />
+        <div class="form-field">
+          <label for="taskTitle">عنوان المهمة *</label>
+          <input type="text" id="taskTitle" placeholder="أدخل عنوان المهمة" required />
+        </div>
+        <div class="form-field">
+          <label for="taskDescription">وصف المهمة</label>
+          <textarea id="taskDescription" placeholder="وصف المهمة (اختياري)" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="taskPriority">الأولوية</label>
+            <select id="taskPriority">
+              <option value="low">منخفضة</option>
+              <option value="medium" selected>متوسطة</option>
+              <option value="high">عالية</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="taskCategory">التصنيف</label>
+            <select id="taskCategory">
+              <option value="general">عام</option>
+              <option value="work">عمل</option>
+              <option value="study">دراسة</option>
+              <option value="personal">شخصي</option>
+              <option value="health">صحة</option>
+              <option value="finance">مالية</option>
+              <option value="religious">ديني</option>
+              <option value="family">عائلة</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="taskDueDate">تاريخ التسليم</label>
+          <input type="date" id="taskDueDate" />
+        </div>
+        <div class="form-field">
+          <label for="taskAttachment">مرفق (اختياري)</label>
+          <input type="file" id="taskAttachment" />
+          <div id="taskAttachmentPreview" hidden>
+            <span id="taskAttachmentName"></span>
+            <button type="button" id="taskAttachmentRemove">إزالة</button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelTaskBtn">إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="saveTaskBtn">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ Task Attachment Preview Modal ============ -->
+  <div class="modal-overlay" id="taskPreviewModal" hidden>
+    <div class="modal modal-task-preview" role="dialog" aria-modal="true" aria-labelledby="taskPreviewTitle">
+      <div class="modal-header">
+        <h2 id="taskPreviewTitle">الملف المرفق</h2>
+        <button class="icon-btn" id="closeTaskPreviewModal" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body task-preview-body" id="taskPreviewBody"></div>
     </div>
   </div>
 
