@@ -14,8 +14,6 @@ const APP_SHELL = [
   './app.js',
   './data.js',
   './qrcode.min.js',
-  './productivity.css',
-  './productivity.js',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

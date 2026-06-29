@@ -78,15 +78,11 @@
         <div class="brand-text">
           <h1 class="brand-title" lang="ar">رفيق الذكر</h1>
           <p class="brand-subtitle">أذكار وأدعية شاملة · مصادر سنية موثوقة</p>
+          <button type="button" class="brand-date" id="brandDate" title="فتح التقويم الهجري والميلادي">—</button>
         </div>
       </div>
 
-        <div class="header-date-display">
-          <div class="header-tunisian-date" id="gregorianDateTunisian"></div>
-          <div class="header-gregorian-date" id="gregorianDate"></div>
-          <div class="header-hijri-date" id="hijriDate"></div>
-        </div>
-        <div class="header-actions">
+      <div class="header-actions">
         <button class="icon-btn" id="shareBtn" aria-label="مشاركة الموقع" title="مشاركة الموقع">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
@@ -203,14 +199,21 @@
           </span>
           <span class="cat-label">الإحصائيات</span>
         </button>
-
-        <button class="cat-btn" data-cat="productivity">
+        <button class="cat-btn" data-cat="timer">
           <span class="cat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 14.5"/>
             </svg>
           </span>
-          <span class="cat-label">الإنتاجية</span>
+          <span class="cat-label">المؤقت</span>
+        </button>
+        <button class="cat-btn" data-cat="calendar">
+          <span class="cat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4.5" width="18" height="17" rx="2.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </span>
+          <span class="cat-label">التقويم</span>
         </button>
 
         <div class="cat-divider" role="separator"></div>
@@ -339,41 +342,109 @@
         </div>
       </section>
 
-      <!-- Productivity view -->
-      <section class="view-panel" id="view-productivity" role="tabpanel" hidden>
+      <!-- Productivity timer view -->
+      <section class="view-panel" id="view-timer" role="tabpanel" hidden>
         <div class="section-header">
-          <h2 class="section-title" lang="ar">الإنتاجية وإدارة الوقت</h2>
-          <p class="section-desc">مؤقت بومودورو، جلسات تركيز، مهام يومية، تقويم هجري ومتابعة الإنجاز</p>
+          <h2 class="section-title" lang="ar">مؤقت الإنتاجية</h2>
+          <p class="section-desc">نظّم وقتك لتلاوة القرآن، الحفظ، أو الدراسة بمؤقت تركيز هادئ يسجّل تقدّمك يومًا بعد يوم</p>
         </div>
-        <div class="productivity-content">
-          <nav class="prod-nav" aria-label="أقسام الإنتاجية">
-            <button class="prod-nav-btn active" data-section="dashboard">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-              <span>لوحة المعلومات</span>
-            </button>
-            <button class="prod-nav-btn" data-section="timer">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>المؤقت</span>
-            </button>
-            <button class="prod-nav-btn" data-section="timerSettings">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span>الإعدادات</span>
-            </button>
-            <button class="prod-nav-btn" data-section="tasks">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              <span>المهام</span>
-            </button>
-            <button class="prod-nav-btn" data-section="hijri">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span>التقويم الهجري</span>
-            </button>
-          </nav>
 
-          <div class="prod-panel active" id="prodDashboard"></div>
-          <div class="prod-panel" id="prodTimer" hidden></div>
-          <div class="prod-panel" id="prodTimerSettings" hidden></div>
-          <div class="prod-panel" id="prodTasks" hidden></div>
-          <div class="prod-panel" id="prodHijri" hidden></div>
+        <div class="timer-card" id="timerCard">
+          <div class="timer-mode-tabs" role="tablist" aria-label="نوع المؤقت">
+            <button type="button" class="timer-mode-tab active" data-mode="countdown" role="tab">تنازلي بمدة محددة</button>
+            <button type="button" class="timer-mode-tab" data-mode="stopwatch" role="tab">تصاعدي بلا حد</button>
+          </div>
+
+          <div class="timer-activities" id="timerActivities"></div>
+
+          <div class="timer-durations" id="timerDurations"></div>
+
+          <div class="timer-display-wrap">
+            <div class="timer-ring-wrap" id="timerRingWrap">
+              <svg class="timer-ring" viewBox="0 0 200 200" aria-hidden="true">
+                <circle class="track" cx="100" cy="100" r="86" fill="none" stroke-width="10"/>
+                <circle class="progress" id="timerProgressRing" cx="100" cy="100" r="86" fill="none" stroke-width="10" stroke-dasharray="540.35" stroke-dashoffset="0"/>
+              </svg>
+              <div class="timer-center">
+                <div class="timer-time" id="timerTimeDisplay">15:00</div>
+                <div class="timer-activity-label" id="timerActivityLabel">تلاوة القرآن</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timer-controls">
+            <button type="button" class="btn btn-secondary" id="timerResetBtn" hidden>تصفير</button>
+            <button type="button" class="btn btn-primary timer-main-btn" id="timerStartBtn">ابدأ</button>
+            <button type="button" class="btn btn-danger-outline" id="timerFinishBtn" hidden>إنهاء الجلسة</button>
+          </div>
+        </div>
+
+        <div class="insight-cards" id="timerInsightCards"></div>
+
+        <div class="stats-block">
+          <h3 class="section-subtitle" lang="ar">آخر الجلسات</h3>
+          <div class="timer-sessions-list" id="timerSessionsList"></div>
+          <div class="empty-state" id="timerSessionsEmpty" hidden>
+            <div class="empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 14.5"/>
+              </svg>
+            </div>
+            <h3>لم تبدأ أي جلسة تركيز بعد</h3>
+            <p>اختر نشاطًا ومدة، ثم اضغط «ابدأ» لتبدأ أول جلسة تركيز لك.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hijri / Gregorian calendar view -->
+      <section class="view-panel" id="view-calendar" role="tabpanel" hidden>
+        <div class="section-header">
+          <h2 class="section-title" lang="ar">التقويم الهجري والميلادي</h2>
+          <p class="section-desc">تابع تاريخ اليوم، وتصفّح الأشهر هجريًا وميلاديًا، مع تمييز المناسبات الإسلامية المهمة</p>
+        </div>
+
+        <div class="cal-today-card">
+          <div class="cal-today-weekday" id="calTodayWeekday">—</div>
+          <div class="cal-today-dates">
+            <span class="cal-today-hijri" id="calTodayHijri">—</span>
+            <span class="cal-today-sep">·</span>
+            <span class="cal-today-gregorian" id="calTodayGregorian">—</span>
+          </div>
+          <div class="cal-today-event" id="calTodayEvent" hidden></div>
+        </div>
+
+        <div class="cal-card">
+          <div class="cal-toolbar">
+            <button type="button" class="icon-btn" id="calPrevBtn" aria-label="الشهر السابق">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <div class="cal-month-label" id="calMonthLabel">—</div>
+            <button type="button" class="icon-btn" id="calNextBtn" aria-label="الشهر التالي">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          </div>
+
+          <div class="cal-mode-tabs" role="tablist" aria-label="نوع التقويم">
+            <button type="button" class="cal-mode-tab active" data-calmode="gregorian" role="tab">ميلادي</button>
+            <button type="button" class="cal-mode-tab" data-calmode="hijri" role="tab">هجري</button>
+            <button type="button" class="btn btn-secondary cal-today-btn" id="calTodayBtn">اليوم</button>
+          </div>
+
+          <div class="cal-weekdays">
+            <span>أحد</span><span>إثنين</span><span>ثلاثاء</span><span>أربعاء</span><span>خميس</span><span class="weekend">جمعة</span><span class="weekend">سبت</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+
+          <div class="cal-legend"><span class="cal-legend-dot"></span><span>مناسبة إسلامية</span></div>
+
+          <div class="cal-adjust-row">
+            <label for="calAdjustGroup">ضبط التاريخ الهجري — التاريخ محسوب حسابيًا وقد يختلف يومًا واحدًا عن رؤية الهلال المحلية في بلدك</label>
+            <div class="cal-adjust-group" id="calAdjustGroup">
+              <button type="button" data-adj="-1" aria-label="تقليل يوم">−</button>
+              <span id="calAdjustValue">0</span>
+              <button type="button" data-adj="1" aria-label="زيادة يوم">+</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -553,7 +624,7 @@
         <p class="about-text">
           ﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾
         </p>
-        <p class="about-version">رفيق الذكر — منصة الأذكار الشاملة · الإصدار 3.0</p>
+        <p class="about-version">رفيق الذكر — منصة الأذكار الشاملة · الإصدار 3.2</p>
         <p class="about-sources">المصادر: القرآن الكريم، صحيح البخاري ومسلم، سنن أبي داود والترمذي والنسائي وابن ماجه، مع تخريج الألباني رحمه الله.</p>
       </div>
     </div>
@@ -687,18 +758,11 @@
     </div>
   </div>
 
-  <!-- ============ Task Modal ============ -->
-  <div class="task-modal-overlay" id="taskModalOverlay" hidden>
-    <div class="task-form" id="taskForm" role="dialog" aria-modal="true" aria-labelledby="taskFormTitle"></div>
-  </div>
-
   <!-- ============ Toast Container ============ -->
   <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
-  <link rel="stylesheet" href="./productivity.css" />
   <script src="./data.js"></script>
   <script src="./qrcode.min.js"></script>
   <script src="./app.js"></script>
-  <script src="./productivity.js"></script>
 </body>
 </html>

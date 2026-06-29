@@ -75,8 +75,6 @@
 
 [data-theme="dark"] {
   --bg-primary: #0a1410;
-  --rose: #fb7185;
-  --rose-dark: #f43f5e;
   --bg-secondary: #0f1c17;
   --bg-tertiary: #122821;
   --surface: #122821;
@@ -121,10 +119,32 @@ input, textarea, select { font-family: inherit; }
 h1, h2, h3, h4, p { margin: 0; }
 :root { color-scheme: light; }
 [data-theme="dark"] { color-scheme: dark; }
-[data-theme="dark"] .prod-card.active {
-  background: linear-gradient(135deg, rgba(20,184,138,0.12), rgba(20,184,138,0.03));
-}
 :focus-visible { outline: 2px solid var(--emerald-light); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- Touch & scroll behavior (mobile fix) ---------- */
+/* `touch-action: manipulation` lets the browser fire click immediately on
+   tap (no 300ms delay) and disables double-tap-zoom/pinch on these elements,
+   WITHOUT killing the synthetic click event the way a JS preventDefault()
+   on touchstart does. This is what actually makes tap-to-count reliable on
+   phones — see app.js init() for the removed anti-pattern this replaces. */
+button, a, [role="button"], input, textarea, select,
+.cat-btn, .cat-card, .name-card, .read-card, .staged-tap-btn, .counter-center,
+.icon-btn, .dhikr-mini-btn, .fab-free, .toggle-switch, .font-size-btn,
+.timer-mode-tab, .cal-mode-tab, .duration-chip, .timer-activity-chip, .cal-cell,
+.btn, .mobile-nav-toggle {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+html, body { overscroll-behavior-y: contain; }
+.sidebar, .modal, .drawer-body, .heatmap-wrap {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+/* `.btn`, `.icon-btn`, etc. set `display: inline-flex/grid`, which — being
+   equal specificity to the browser's own `[hidden]{display:none}` rule but
+   later in the cascade — silently overrides it, leaving "hidden" buttons
+   visible (this was already affecting the native-share button). Force it. */
+[hidden] { display: none !important; }
 
 /* ---------- Decorative Background ---------- */
 .bg-pattern {
@@ -194,31 +214,19 @@ h1, h2, h3, h4, p { margin: 0; }
   letter-spacing: 0.04em;
   margin-top: 2px;
 }
-.header-date-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
+.brand-date {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--emerald);
+  font-weight: 700;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+  background: none;
+  text-align: start;
+  transition: color var(--t-fast);
 }
-.header-tunisian-date {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  direction: rtl;
-  white-space: nowrap;
-}
-.header-gregorian-date {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  direction: rtl;
-  white-space: nowrap;
-}
-.header-hijri-date {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  direction: rtl;
-  white-space: nowrap;
-}
+.brand-date:hover { color: var(--emerald-light); text-decoration: underline; }
+[data-theme="dark"] .brand-date { color: var(--emerald-light); }
 .header-actions { display: flex; gap: var(--sp-2); }
 
 .icon-btn {
@@ -850,20 +858,6 @@ h1, h2, h3, h4, p { margin: 0; }
   100% { transform: scale(1); }
 }
 
-/* ---------- Touch screen optimizations ---------- */
-.touch-optimized, .counter-center, .read-card, .staged-tap-btn,
-.name-card, .cat-card, .mini-btn, .dhikr-mini-btn, .btn,
-.fab-free, .stage-row, .focus-tap {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Improve momentum scrolling on content areas */
-.content-area, .sidebar, .drawer-body, .modal-body, .cat-list {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
 /* ---------- No-counter card (e.g., for duas without fixed repetition) ---------- */
 .dhikr-card.no-counter .counter-area {
   padding: var(--sp-3) 0;
@@ -1148,95 +1142,6 @@ h1, h2, h3, h4, p { margin: 0; }
   margin-bottom: var(--sp-2);
 }
 .empty-state p { max-width: 40ch; margin: 0 auto; font-size: 0.9rem; line-height: 1.6; }
-
-/* ---------- Productivity Timer ---------- */
-.productivity-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  margin-top: var(--sp-4);
-}
-.prod-card {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: var(--sp-3) var(--sp-4);
-  transition: all var(--t-fast);
-}
-.prod-card.active {
-  border-color: var(--emerald-light);
-  background: linear-gradient(135deg, var(--emerald-subtle, rgba(5,150,105,0.06)), transparent);
-  box-shadow: 0 0 0 1px var(--emerald-light);
-}
-.prod-icon {
-  width: 42px; height: 42px;
-  display: grid; place-items: center;
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--emerald);
-  flex-shrink: 0;
-}
-.prod-card.active .prod-icon {
-  background: var(--emerald);
-  color: white;
-}
-.prod-info { flex: 1; min-width: 0; }
-.prod-label {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
-.prod-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.prod-stats {
-  text-align: center;
-  flex-shrink: 0;
-}
-.prod-timer {
-  font-size: 1.1rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
-  direction: ltr;
-  min-width: 5ch;
-}
-.prod-card.active .prod-timer {
-  color: var(--emerald);
-}
-.prod-sessions {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  margin-top: 1px;
-}
-.prod-btn {
-  padding: var(--sp-1) var(--sp-3);
-  border-radius: var(--r-md);
-  border: 1px solid var(--emerald);
-  background: transparent;
-  color: var(--emerald);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--t-fast);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.prod-btn:hover { background: var(--emerald-subtle, rgba(5,150,105,0.08)); }
-.prod-btn-stop {
-  background: var(--rose, #e11d48);
-  border-color: var(--rose, #e11d48);
-  color: white;
-}
-.prod-btn-stop:hover { background: var(--rose-dark, #be123c); }
 
 /* ---------- Achievements ---------- */
 .achievements-section {
@@ -2218,6 +2123,246 @@ h1, h2, h3, h4, p { margin: 0; }
   height: 18px;
 }
 
+/* =====================================================
+   Productivity Timer (Quran reading / study / focus)
+   ===================================================== */
+.timer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: var(--sp-6) var(--sp-5);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+}
+.timer-mode-tabs, .cal-mode-tabs {
+  display: flex;
+  gap: var(--sp-2);
+  background: var(--surface-2);
+  border-radius: var(--r-full);
+  padding: 4px;
+  width: 100%;
+  max-width: 420px;
+}
+.cal-mode-tabs { max-width: none; align-items: center; }
+.timer-mode-tab, .cal-mode-tab {
+  flex: 1;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all var(--t-fast);
+  text-align: center;
+  background: none;
+}
+.timer-mode-tab.active, .cal-mode-tab.active {
+  background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+  color: #fff;
+  box-shadow: var(--shadow-accent);
+}
+
+.timer-activities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: center;
+  width: 100%;
+}
+.timer-activity-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-ar);
+  transition: all var(--t-fast);
+}
+.timer-activity-chip:hover { background: var(--surface-3); }
+.timer-activity-chip.active {
+  background: var(--emerald-glow);
+  border-color: var(--emerald);
+  color: var(--emerald);
+}
+[data-theme="dark"] .timer-activity-chip.active { color: var(--emerald-light); }
+
+.timer-durations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: center;
+  width: 100%;
+  align-items: center;
+}
+.duration-chip {
+  min-width: 46px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-lat);
+  transition: all var(--t-fast);
+}
+.duration-chip:hover { background: var(--surface-3); }
+.duration-chip.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-color: transparent;
+  color: #3a2c0c;
+}
+.duration-custom-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.duration-custom-input {
+  width: 64px;
+  padding: var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.duration-custom-input:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-glow); }
+
+.timer-display-wrap { padding: var(--sp-2) 0; }
+.timer-ring-wrap { position: relative; width: 220px; height: 220px; display: grid; place-items: center; }
+.timer-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer-ring .track { stroke: var(--surface-3); }
+.timer-ring .progress { stroke: url(#counterGradient); stroke-linecap: round; transition: stroke-dashoffset 240ms linear; }
+.timer-ring-wrap.is-stopwatch .timer-ring { opacity: 0.18; }
+.timer-center {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  width: 172px; height: 172px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--t-fast);
+}
+.timer-time {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-lat);
+}
+.timer-activity-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; font-family: var(--font-ar); }
+.timer-card.is-running .timer-center { border-color: var(--emerald); }
+.timer-card.is-running .timer-time { color: var(--emerald); }
+.timer-card.is-running .timer-ring-wrap { animation: timer-glow 2.4s ease-in-out infinite; }
+@keyframes timer-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  50% { filter: drop-shadow(0 0 14px var(--emerald-glow-strong)); }
+}
+
+.timer-controls { display: flex; gap: var(--sp-3); flex-wrap: wrap; justify-content: center; width: 100%; }
+.timer-main-btn { min-width: 140px; }
+
+.timer-sessions-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.timer-session-item {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); box-shadow: var(--shadow-sm);
+}
+.timer-session-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--emerald-glow); color: var(--emerald);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.timer-session-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.timer-session-activity { font-family: var(--font-ar); font-size: 0.95rem; color: var(--text-primary); font-weight: 700; }
+.timer-session-meta { font-size: 0.75rem; color: var(--text-muted); }
+.timer-session-minutes {
+  font-size: 0.85rem; font-weight: 700; color: var(--emerald);
+  font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--font-lat);
+}
+
+/* =====================================================
+   Calendar (Hijri + Gregorian)
+   ===================================================== */
+.cal-today-card {
+  background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+  color: #fff;
+  border-radius: var(--r-xl);
+  padding: var(--sp-6) var(--sp-5);
+  text-align: center;
+  box-shadow: var(--shadow-accent);
+  margin-bottom: var(--sp-6);
+}
+.cal-today-weekday { font-size: 0.95rem; opacity: 0.85; margin-bottom: var(--sp-2); font-weight: 600; font-family: var(--font-ar); }
+.cal-today-dates { display: flex; align-items: baseline; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.cal-today-hijri { font-family: var(--font-ar); font-size: 1.7rem; font-weight: 700; }
+.cal-today-sep { opacity: 0.5; }
+.cal-today-gregorian { font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; opacity: 0.9; font-family: var(--font-lat); }
+.cal-today-event {
+  margin-top: var(--sp-3); display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: var(--r-full);
+  font-family: var(--font-ar); font-size: 0.9rem;
+}
+
+.cal-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl);
+  padding: var(--sp-5); box-shadow: var(--shadow-sm);
+}
+.cal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-4); gap: var(--sp-3); }
+.cal-month-label { font-family: var(--font-ar); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); text-align: center; flex: 1; }
+.cal-mode-tabs { margin: 0 0 var(--sp-4); gap: var(--sp-3); }
+.cal-mode-tabs .cal-mode-tab { flex: 0 1 100px; }
+.cal-today-btn { padding: 6px 16px; min-height: auto; font-size: 0.78rem; margin-inline-start: auto; }
+
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-align: center;
+  margin-bottom: var(--sp-2); font-family: var(--font-ar);
+}
+.cal-weekdays .weekend { color: var(--coral); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-cell {
+  aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: var(--r-md); background: var(--surface-2); position: relative;
+  transition: all var(--t-fast);
+}
+.cal-cell.empty { background: transparent; }
+.cal-cell.is-weekend { background: var(--coral-soft); }
+.cal-cell.is-today { background: linear-gradient(135deg, var(--emerald), var(--emerald-dark)); color: #fff; box-shadow: var(--shadow-accent); }
+.cal-cell.has-event::after {
+  content: ""; position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold);
+}
+.cal-cell.is-today.has-event::after { background: #fff; }
+.cal-day-main { font-size: 0.95rem; font-weight: 700; font-variant-numeric: tabular-nums; font-family: var(--font-lat); }
+.cal-day-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 1px; font-family: var(--font-ar); }
+.cal-cell.is-today .cal-day-sub { color: rgba(255,255,255,0.85); }
+.cal-legend { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: var(--sp-4); font-size: 0.75rem; color: var(--text-muted); }
+.cal-legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); display: inline-block; }
+.cal-adjust-row { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px dashed var(--border); text-align: center; }
+.cal-adjust-row label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: var(--sp-2); line-height: 1.6; max-width: 50ch; margin-inline: auto; }
+.cal-adjust-group { display: inline-flex; align-items: center; gap: var(--sp-3); background: var(--surface-2); border-radius: var(--r-full); padding: 4px 6px; }
+.cal-adjust-group button {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-primary); font-weight: 700; display: grid; place-items: center;
+}
+.cal-adjust-group button:hover { background: var(--emerald-glow); color: var(--emerald); }
+#calAdjustValue { min-width: 24px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--emerald); font-family: var(--font-lat); }
+
 @media (max-width: 1024px) {
   .app-main {
     grid-template-columns: 220px 1fr;
@@ -2250,6 +2395,18 @@ h1, h2, h3, h4, p { margin: 0; }
   }
   [dir="rtl"] .sidebar { transform: translateX(100%); }
   .sidebar.open { transform: translateX(0) !important; }
+
+  /* `.app-main` has `position: relative; z-index: 1`, which makes it its own
+     stacking context — that traps the sidebar's z-index:60 *inside* it, so
+     it was always compared against the sticky header's z-index:50 as a whole
+     unit ranked "1" vs "50", and lost. Result: opening the sidebar on a phone
+     left it rendered BEHIND the header, hiding/blocking the Home, Favorites,
+     Timer, Calendar, etc. buttons that sit near the top of the list. Lifting
+     app-main's rank only while the sidebar is open fixes this without
+     touching the header's normal sticky-over-content behavior. */
+  .app-main:has(.sidebar.open) {
+    z-index: 70;
+  }
 
   .mobile-nav-toggle {
     display: grid;
@@ -2298,6 +2455,21 @@ h1, h2, h3, h4, p { margin: 0; }
   .category-cards { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 
   .section-header { flex-direction: column; align-items: stretch; }
+
+  .timer-ring-wrap { width: 190px; height: 190px; }
+  .timer-center { width: 148px; height: 148px; }
+  .timer-time { font-size: 2.1rem; }
+  .timer-card { padding: var(--sp-5) var(--sp-3); }
+  .timer-main-btn { flex: 1; }
+
+  .cal-today-hijri { font-size: 1.35rem; }
+  .cal-today-gregorian { font-size: 0.92rem; }
+  .cal-card { padding: var(--sp-4) var(--sp-3); }
+  .cal-day-main { font-size: 0.82rem; }
+  .cal-day-sub { font-size: 0.55rem; }
+  .cal-weekdays { font-size: 0.62rem; }
+  .cal-mode-tabs { flex-wrap: wrap; }
+  .cal-today-btn { margin-inline-start: 0; flex: 1; }
 }
 
 @media (max-width: 420px) {
@@ -2310,6 +2482,17 @@ h1, h2, h3, h4, p { margin: 0; }
   .heat-cell { width: 10px; height: 10px; }
   .names-grid { grid-template-columns: 1fr 1fr; }
   .name-arabic { font-size: 1.4rem; }
+
+  .brand-date { display: none; }
+  .timer-ring-wrap { width: 168px; height: 168px; }
+  .timer-center { width: 130px; height: 130px; }
+  .timer-time { font-size: 1.8rem; }
+  .timer-activity-chip { font-size: 0.78rem; padding: var(--sp-2) var(--sp-3); }
+  .duration-chip { min-width: 40px; font-size: 0.76rem; }
+  .cal-day-main { font-size: 0.74rem; }
+  .cal-day-sub { font-size: 0.5rem; }
+  .cal-today-hijri { font-size: 1.15rem; }
+  .cal-today-gregorian { font-size: 0.82rem; }
 }
 
 /* ---------- Reduced motion ---------- */
@@ -2323,7 +2506,7 @@ h1, h2, h3, h4, p { margin: 0; }
 
 /* ---------- Print ---------- */
 @media print {
-  .app-header, .fab-reset, .fab-free, .focus-overlay, .header-actions, .dhikr-actions, .dhikr-mini-actions, .sidebar, .mobile-nav-toggle { display: none; }
+  .app-header, .fab-reset, .fab-free, .focus-overlay, .header-actions, .dhikr-actions, .dhikr-mini-actions, .sidebar, .mobile-nav-toggle, .timer-controls, .cal-adjust-row { display: none; }
   body { background: #fff; }
   .app-main { grid-template-columns: 1fr; }
 }

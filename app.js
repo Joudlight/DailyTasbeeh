@@ -29,7 +29,7 @@
     completedEver: 'dhikr:completedEver',
     reminders: 'dhikr:reminders',
     favorites: 'dhikr:favorites',
-    productivity: 'dhikr:productivity',
+    timerSessions: 'dhikr:timerSessions',
   };
 
   const DEFAULT_SETTINGS = {
@@ -41,6 +41,7 @@
     remindersEnabled: false,
     remindersMorning: '05:00',
     remindersEvening: '17:30',
+    hijriAdjustment: 0,
   };
 
   const BADGES = [
@@ -73,7 +74,7 @@
     reminders: { lastMorning: null, lastEvening: null },
     favorites: {}, // { [id]: true }
     namesViewed: {}, // { [name_index]: true } — for the "all_names_read" badge
-    productivity: {}, // { dateKey: { activityId: [{ start: timestamp, end: timestamp? }] } }
+    timerSessions: [], // [{ id, activity, minutes, date, ts }] — productivity timer log
   };
 
   function loadState() {
@@ -97,7 +98,7 @@
     state.reminders = state.reminders || { lastMorning: null, lastEvening: null };
     state.favorites = state.favorites || {};
     state.namesViewed = state.namesViewed || {};
-    state.productivity = state.productivity || {};
+    state.timerSessions = Array.isArray(state.timerSessions) ? state.timerSessions : [];
   }
 
   function saveState(key) {
@@ -125,219 +126,6 @@
   // Use standard international numbers (1, 2, 3...) — NOT Arabic-Indic numerals
   function fmtNum(n) {
     return Number(n).toLocaleString('en-US');
-  }
-
-  const HIJRI_MONTHS = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
-  const TUNISIAN_MONTHS = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-  const ARABIC_WEEKDAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-
-  function gregorianToHijri(date) {
-    try {
-      const f = new Intl.DateTimeFormat('en-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric' });
-      const parts = f.formatToParts(date);
-      let hDay = 0, hMonth = 0, hYear = 0;
-      for (const p of parts) {
-        if (p.type === 'day') hDay = parseInt(p.value, 10);
-        if (p.type === 'month') hMonth = parseInt(p.value, 10);
-        if (p.type === 'year') hYear = parseInt(p.value, 10);
-      }
-      if (hDay && hMonth && hYear) {
-        return { year: hYear, month: hMonth, day: hDay, monthName: HIJRI_MONTHS[hMonth - 1] };
-      }
-    } catch (_) {}
-    const g = new Date(date);
-    let y = g.getFullYear(), m = g.getMonth() + 1, d = g.getDate();
-    if (m <= 2) { y--; m += 12; }
-    const A = Math.floor(y / 100);
-    const B = 2 - A + Math.floor(A / 4);
-    const jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
-    const hijriEpoch = 1948439;
-    const days = Math.round(jd) - hijriEpoch;
-    const hYear = Math.floor((30 * days + 10646) / 10631);
-    const r = days - Math.floor((hYear - 1) * 10631 / 30);
-    const hMonth = Math.min(12, Math.max(1, Math.ceil(r / 29.5)));
-    const hDay = Math.min(30, Math.max(1, Math.floor(r - (hMonth - 1) * 29.5)));
-    return { year: hYear, month: hMonth, day: hDay, monthName: HIJRI_MONTHS[hMonth - 1] };
-  }
-
-  function getHijriDateString(date) {
-    const h = gregorianToHijri(date);
-    return `${h.day} ${h.monthName} ${h.year} هـ`;
-  }
-
-  // Productivity activities
-  const PRODUCTIVITY_ACTIVITIES = [
-    { id: 'quran', label: 'قراءة القرآن', icon: 'book', desc: 'قراءة وتدبر آيات القرآن الكريم' },
-    { id: 'studying', label: 'دراسة', icon: 'book-open', desc: 'طلب العلم الشرعي والدنيوي' },
-    { id: 'dhikr', label: 'ذكر وتسبيح', icon: 'heart', desc: 'الأذكار والاستغفار والتسبيح' },
-    { id: 'prayer', label: 'صلاة', icon: 'moon', desc: 'الصلوات المفروضة والنوافل' },
-    { id: 'charity', label: 'صدقة', icon: 'gift', desc: 'الصدقات والإحسان للآخرين' },
-    { id: 'fasting', label: 'صيام', icon: 'clock', desc: 'صيام التطوع والقضاء' },
-    { id: 'dua', label: 'دعاء', icon: 'pray', desc: 'الدعاء والمناجاة والتضرع' },
-  ];
-  const PRODUCTIVITY_IDS = PRODUCTIVITY_ACTIVITIES.map(a => a.id);
-
-  function productivityTodayKey() {
-    return todayKey();
-  }
-
-  function getProductivitySessions(activityId) {
-    const dayKey = productivityTodayKey();
-    const day = state.productivity[dayKey] || {};
-    return day[activityId] || [];
-  }
-
-  function getProductivityActiveActivity() {
-    const dayKey = productivityTodayKey();
-    const day = state.productivity[dayKey] || {};
-    for (const aid of PRODUCTIVITY_IDS) {
-      const sessions = day[aid] || [];
-      const last = sessions[sessions.length - 1];
-      if (last && last.end == null) return aid;
-    }
-    return null;
-  }
-
-  function startProductivityTimer(activityId) {
-    const active = getProductivityActiveActivity();
-    if (active === activityId) return;
-    if (active) stopProductivityTimer(active);
-    const dayKey = productivityTodayKey();
-    if (!state.productivity[dayKey]) state.productivity[dayKey] = {};
-    if (!state.productivity[dayKey][activityId]) state.productivity[dayKey][activityId] = [];
-    state.productivity[dayKey][activityId].push({ start: Date.now() });
-    saveState('productivity');
-    renderProductivityView();
-  }
-
-  function stopProductivityTimer(activityId) {
-    const dayKey = productivityTodayKey();
-    const day = state.productivity[dayKey] || {};
-    const sessions = day[activityId] || [];
-    const last = sessions[sessions.length - 1];
-    if (last && last.end == null) {
-      last.end = Date.now();
-      saveState('productivity');
-    }
-    renderProductivityView();
-  }
-
-  function toggleProductivityTimer(activityId) {
-    const active = getProductivityActiveActivity();
-    if (active === activityId) {
-      stopProductivityTimer(activityId);
-    } else {
-      startProductivityTimer(activityId);
-    }
-  }
-
-  function formatDuration(ms) {
-    if (ms <= 0) return '00:00';
-    const totalSec = Math.floor(ms / 1000);
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    if (h > 0) {
-      return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  }
-
-  function getActivityTodayTotalMs(activityId) {
-    const sessions = getProductivitySessions(activityId);
-    let total = 0;
-    for (const s of sessions) {
-      if (s.end != null) {
-        total += s.end - s.start;
-      } else {
-        total += Date.now() - s.start;
-      }
-    }
-    return total;
-  }
-
-  function renderProductivityView() {
-    const grid = $('#productivityGrid');
-    if (!grid) return;
-    const activeId = getProductivityActiveActivity();
-    let html = '';
-    for (const act of PRODUCTIVITY_ACTIVITIES) {
-      const isActive = activeId === act.id;
-      const totalMs = getActivityTodayTotalMs(act.id);
-      const sessions = getProductivitySessions(act.id);
-      const sessionCount = sessions.length;
-      html += `<div class="prod-card ${isActive ? 'active' : ''}">
-        <div class="prod-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getProdIconPath(act.icon)}</svg>
-        </div>
-        <div class="prod-info">
-          <div class="prod-label">${escapeHtml(act.label)}</div>
-          <div class="prod-desc">${escapeHtml(act.desc)}</div>
-        </div>
-        <div class="prod-stats">
-          <div class="prod-timer" data-activity="${act.id}">${formatDuration(totalMs)}</div>
-          <div class="prod-sessions">${sessionCount > 0 ? fmtNum(sessionCount) + ' جلسة' : ''}</div>
-        </div>
-        <button class="prod-btn ${isActive ? 'prod-btn-stop' : ''}" data-activity="${act.id}">
-          ${isActive ? 'إيقاف' : 'بدء'}
-        </button>
-      </div>`;
-    }
-    grid.innerHTML = html;
-    grid.querySelectorAll('.prod-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        toggleProductivityTimer(btn.dataset.activity);
-      });
-    });
-  }
-
-  function getProdIconPath(icon) {
-    const icons = {
-      'book': '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
-      'book-open': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
-      'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
-      'moon': '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
-      'gift': '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
-      'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-      'pray': '<path d="M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M12 8v8"/><path d="M8 20v-4h8v4"/>',
-    };
-    return icons[icon] || icons.clock;
-  }
-
-  function updateProductivityTimers() {
-    const activeId = getProductivityActiveActivity();
-    if (!activeId) return;
-    const totalMs = getActivityTodayTotalMs(activeId);
-    const timerEls = document.querySelectorAll('.prod-timer');
-    timerEls.forEach(el => {
-      if (el.dataset.activity === activeId) {
-        el.textContent = formatDuration(totalMs);
-      }
-    });
-  }
-
-  // Start productivity timer tick
-  let prodTickInterval = null;
-  function startProductivityTick() {
-    if (prodTickInterval) clearInterval(prodTickInterval);
-    prodTickInterval = setInterval(updateProductivityTimers, 1000);
-  }
-
-  function updateDates() {
-    const now = new Date();
-    const wd = ARABIC_WEEKDAYS[now.getDay()];
-    const d = now.getDate();
-    const m = now.getMonth();
-    const y = now.getFullYear();
-
-    const tnEl = $('#gregorianDateTunisian');
-    if (tnEl) tnEl.textContent = `${wd} ${d} ${TUNISIAN_MONTHS[m]} ${y}`;
-
-    const gEl = $('#gregorianDate');
-    if (gEl) gEl.textContent = now.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-    const hEl = $('#hijriDate');
-    if (hEl) hEl.textContent = getHijriDateString(now);
   }
 
   function showToast(message, type = 'success', duration = 2400) {
@@ -1317,8 +1105,8 @@
   }
 
   function navigateTo(cat) {
-    // Determine if this is a top-level view (home/favorites/custom/stats/search) or a category
-    const topViews = ['home', 'favorites', 'custom', 'stats', 'search', 'productivity'];
+    // Determine if this is a top-level view (home/favorites/custom/stats/timer/calendar/search) or a category
+    const topViews = ['home', 'favorites', 'custom', 'stats', 'timer', 'calendar', 'search'];
     const isTopView = topViews.includes(cat);
 
     $$('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
@@ -1337,11 +1125,8 @@
     else if (cat === 'favorites') renderFavoritesGrid();
     else if (cat === 'custom') renderCustomGrid();
     else if (cat === 'stats') renderStatsTab();
-    else if (cat === 'productivity') {
-      if (window.ProductivityApp) {
-        window.ProductivityApp.showDashboard();
-      }
-    }
+    else if (cat === 'timer') renderTimerTab();
+    else if (cat === 'calendar') renderCalendarTab();
     else if (!isTopView) renderCategoryView(cat);
     // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1399,6 +1184,9 @@
       quran: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
       gift: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
       star: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 14.5"/></svg>',
+      calendar: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+      crescent: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 1 0 11 11z"/></svg>',
     };
     return icons[name] || icons.book;
   }
@@ -1970,7 +1758,7 @@
     });
 
     $('#clearDataBtn').addEventListener('click', () => {
-      showConfirm('سيتم مسح جميع البيانات نهائيًا (الأذكار المخصصة، العدّادات، الإحصائيات، الإنجازات، المفضلة). لا يمكن التراجع. هل أنت متأكد؟', () => {
+      showConfirm('سيتم مسح جميع البيانات نهائيًا (الأذكار المخصصة، العدّادات، الإحصائيات، الإنجازات، المفضلة، وجلسات المؤقت). لا يمكن التراجع. هل أنت متأكد؟', () => {
         Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
         state = {
           counts: {},
@@ -1984,7 +1772,9 @@
           reminders: { lastMorning: null, lastEvening: null },
           favorites: {},
           namesViewed: {},
+          timerSessions: [],
         };
+        resetTimerHard();
         applyTheme(state.settings.theme);
         renderAll();
         updateStats();
@@ -2235,6 +2025,7 @@
       counts: state.counts,
       favorites: state.favorites,
       completedToday: state.completedToday,
+      timerSessions: state.timerSessions,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2270,6 +2061,7 @@
         if (data.counts) { state.counts = data.counts; saveState('counts'); }
         if (data.favorites) { state.favorites = data.favorites; saveState('favorites'); }
         if (data.completedToday) { state.completedToday = data.completedToday; saveState('completedToday'); }
+        if (Array.isArray(data.timerSessions)) { state.timerSessions = data.timerSessions; saveState('timerSessions'); }
         renderAll();
         renderBadges();
         updateStats();
@@ -2444,7 +2236,510 @@
   }
 
   // ===================================================
-  // 23. Mobile sidebar toggle
+  // 23. Hijri calendar — conversion utilities + calendar view
+  // ===================================================
+
+  // Calibrated tabular (civil) Hijri↔Gregorian conversion, verified against
+  // the globally-announced start of 1448 AH (1 Muharram 1448 = 16 Jun 2026).
+  // Like every purely-calculated Hijri calendar, this can differ by a day
+  // from a given country's moon-sighting announcement — hence the small
+  // ± adjustment control offered below.
+  const HIJRI_EPOCH = 1948439;
+  const HIJRI_MONTHS = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+  const GREGORIAN_MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const WEEKDAYS_AR = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+  function gregorianToJDN(y, m, d) {
+    const a = Math.floor((14 - m) / 12);
+    const y2 = y + 4800 - a;
+    const m2 = m + 12 * a - 3;
+    return d + Math.floor((153 * m2 + 2) / 5) + 365 * y2 + Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
+  }
+
+  function jdnToGregorian(jdn) {
+    const a = jdn + 32044;
+    const b = Math.floor((4 * a + 3) / 146097);
+    const c = a - Math.floor((146097 * b) / 4);
+    const d2 = Math.floor((4 * c + 3) / 1461);
+    const e = c - Math.floor((1461 * d2) / 4);
+    const m2 = Math.floor((5 * e + 2) / 153);
+    const day = e - Math.floor((153 * m2 + 2) / 5) + 1;
+    const month = m2 + 3 - 12 * Math.floor(m2 / 10);
+    const year = 100 * b + d2 - 4800 + Math.floor(m2 / 10);
+    return { year, month, day };
+  }
+
+  function jdnToHijri(jdn) {
+    let l = jdn - HIJRI_EPOCH + 10632;
+    const n = Math.floor((l - 1) / 10631);
+    l = l - 10631 * n + 354;
+    const j = (Math.floor((10985 - l) / 5316)) * (Math.floor((50 * l) / 17719)) + (Math.floor(l / 5670)) * (Math.floor((43 * l) / 15238));
+    l = l - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50)) - (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
+    const month = Math.floor((24 * l) / 709);
+    const day = l - Math.floor((709 * month) / 24);
+    const year = 30 * n + j - 30;
+    return { year, month, day };
+  }
+
+  function hijriToJDN(year, month, day) {
+    return day + Math.ceil(29.5 * (month - 1)) + (year - 1) * 354 + Math.floor((3 + 11 * year) / 30) + HIJRI_EPOCH - 1;
+  }
+
+  function hijriAdjustment() {
+    return state.settings.hijriAdjustment || 0;
+  }
+
+  function gregorianToHijri(date) {
+    const jdn = gregorianToJDN(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    return jdnToHijri(jdn + hijriAdjustment());
+  }
+
+  function hijriToGregorianDate(year, month, day) {
+    const jdn = hijriToJDN(year, month, day) - hijriAdjustment();
+    const g = jdnToGregorian(jdn);
+    return new Date(g.year, g.month - 1, g.day);
+  }
+
+  function getHijriMonthLength(year, month) {
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    return hijriToJDN(nextYear, nextMonth, 1) - hijriToJDN(year, month, 1);
+  }
+
+  // Significant, broadly-agreed-upon Hijri dates (no disputed observances)
+  function getIslamicEvent(y, m, d) {
+    if (m === 1 && d === 1) return `رأس السنة الهجرية ${y}هـ`;
+    if (m === 1 && d === 10) return 'يوم عاشوراء';
+    if (m === 9 && d === 1) return 'بداية شهر رمضان المبارك';
+    if (m === 10 && d === 1) return 'عيد الفطر المبارك';
+    if (m === 12 && d === 9) return 'يوم عرفة';
+    if (m === 12 && d === 10) return 'عيد الأضحى المبارك';
+    return null;
+  }
+
+  function updateHeaderDate() {
+    const el = $('#brandDate');
+    if (!el) return;
+    const today = new Date();
+    const h = gregorianToHijri(today);
+    el.textContent = `${WEEKDAYS_AR[today.getDay()]} · ${h.day} ${HIJRI_MONTHS[h.month - 1]} ${h.year}هـ`;
+  }
+
+  let calMode = 'gregorian'; // 'gregorian' | 'hijri'
+  let calAnchor = new Date(); // any date within the month currently displayed
+
+  function calPrevMonth() {
+    if (calMode === 'gregorian') {
+      calAnchor = new Date(calAnchor.getFullYear(), calAnchor.getMonth() - 1, 1);
+    } else {
+      const h = gregorianToHijri(calAnchor);
+      let hy = h.year, hm = h.month - 1;
+      if (hm < 1) { hm = 12; hy -= 1; }
+      calAnchor = hijriToGregorianDate(hy, hm, 1);
+    }
+    renderCalendarGrid();
+  }
+
+  function calNextMonth() {
+    if (calMode === 'gregorian') {
+      calAnchor = new Date(calAnchor.getFullYear(), calAnchor.getMonth() + 1, 1);
+    } else {
+      const h = gregorianToHijri(calAnchor);
+      let hy = h.year, hm = h.month + 1;
+      if (hm > 12) { hm = 1; hy += 1; }
+      calAnchor = hijriToGregorianDate(hy, hm, 1);
+    }
+    renderCalendarGrid();
+  }
+
+  function renderTodayDateCard() {
+    const today = new Date();
+    const h = gregorianToHijri(today);
+    const weekdayEl = $('#calTodayWeekday');
+    const hijriEl = $('#calTodayHijri');
+    const gregEl = $('#calTodayGregorian');
+    const eventEl = $('#calTodayEvent');
+    if (weekdayEl) weekdayEl.textContent = WEEKDAYS_AR[today.getDay()];
+    if (hijriEl) hijriEl.textContent = `${h.day} ${HIJRI_MONTHS[h.month - 1]} ${h.year}هـ`;
+    if (gregEl) gregEl.textContent = `${today.getDate()} ${GREGORIAN_MONTHS_AR[today.getMonth()]} ${today.getFullYear()}م`;
+    const event = getIslamicEvent(h.year, h.month, h.day);
+    if (eventEl) {
+      eventEl.textContent = event ? `✦ ${event}` : '';
+      eventEl.hidden = !event;
+    }
+  }
+
+  function renderCalendarGrid() {
+    const grid = $('#calGrid');
+    const label = $('#calMonthLabel');
+    if (!grid || !label) return;
+    const today = new Date();
+    const todayKeyStr = dayKeyFromDate(today);
+    let cellsHtml = '';
+
+    if (calMode === 'gregorian') {
+      const year = calAnchor.getFullYear();
+      const month = calAnchor.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const startWeekday = new Date(year, month, 1).getDay();
+      for (let i = 0; i < startWeekday; i++) cellsHtml += '<div class="cal-cell empty"></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const h = gregorianToHijri(date);
+        const isToday = dayKeyFromDate(date) === todayKeyStr;
+        const weekday = date.getDay();
+        const isWeekend = weekday === 5 || weekday === 6;
+        const event = getIslamicEvent(h.year, h.month, h.day);
+        const subLabel = h.day === 1 ? `${HIJRI_MONTHS[h.month - 1]}` : h.day;
+        cellsHtml += `<div class="cal-cell${isToday ? ' is-today' : ''}${isWeekend ? ' is-weekend' : ''}${event ? ' has-event' : ''}"${event ? ` title="${escapeHtml(event)}"` : ''}>
+          <span class="cal-day-main">${d}</span>
+          <span class="cal-day-sub">${subLabel}</span>
+        </div>`;
+      }
+      label.textContent = `${GREGORIAN_MONTHS_AR[month]} ${year}`;
+    } else {
+      const h0 = gregorianToHijri(calAnchor);
+      const hYear = h0.year, hMonth = h0.month;
+      const monthLen = getHijriMonthLength(hYear, hMonth);
+      const firstGreg = hijriToGregorianDate(hYear, hMonth, 1);
+      const startWeekday = firstGreg.getDay();
+      for (let i = 0; i < startWeekday; i++) cellsHtml += '<div class="cal-cell empty"></div>';
+      for (let d = 1; d <= monthLen; d++) {
+        const gDate = new Date(firstGreg.getFullYear(), firstGreg.getMonth(), firstGreg.getDate() + (d - 1));
+        const isToday = dayKeyFromDate(gDate) === todayKeyStr;
+        const weekday = gDate.getDay();
+        const isWeekend = weekday === 5 || weekday === 6;
+        const event = getIslamicEvent(hYear, hMonth, d);
+        cellsHtml += `<div class="cal-cell${isToday ? ' is-today' : ''}${isWeekend ? ' is-weekend' : ''}${event ? ' has-event' : ''}"${event ? ` title="${escapeHtml(event)}"` : ''}>
+          <span class="cal-day-main">${d}</span>
+          <span class="cal-day-sub">${gDate.getDate()}/${gDate.getMonth() + 1}</span>
+        </div>`;
+      }
+      label.textContent = `${HIJRI_MONTHS[hMonth - 1]} ${hYear}هـ`;
+    }
+    grid.innerHTML = cellsHtml;
+  }
+
+  function renderCalendarTab() {
+    renderTodayDateCard();
+    renderCalendarGrid();
+    const adjEl = $('#calAdjustValue');
+    if (adjEl) {
+      const adj = hijriAdjustment();
+      adjEl.textContent = (adj > 0 ? '+' : '') + adj;
+    }
+  }
+
+  function setupCalendarTab() {
+    const prevBtn = $('#calPrevBtn');
+    const nextBtn = $('#calNextBtn');
+    const todayBtn = $('#calTodayBtn');
+    if (prevBtn) prevBtn.addEventListener('click', calPrevMonth);
+    if (nextBtn) nextBtn.addEventListener('click', calNextMonth);
+    if (todayBtn) todayBtn.addEventListener('click', () => { calAnchor = new Date(); renderCalendarGrid(); });
+
+    $$('.cal-mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const mode = tab.dataset.calmode;
+        if (mode === calMode) return;
+        calMode = mode;
+        $$('.cal-mode-tab').forEach(t => t.classList.toggle('active', t === tab));
+        renderCalendarGrid();
+      });
+    });
+
+    $$('#calAdjustGroup [data-adj]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delta = Number(btn.dataset.adj);
+        const next = Math.max(-3, Math.min(3, hijriAdjustment() + delta));
+        state.settings.hijriAdjustment = next;
+        saveState('settings');
+        renderCalendarTab();
+        updateHeaderDate();
+        showToast('تم ضبط التاريخ الهجري', 'success', 1500);
+      });
+    });
+
+    const brandDateBtn = $('#brandDate');
+    if (brandDateBtn) brandDateBtn.addEventListener('click', () => navigateTo('calendar'));
+  }
+
+  // ===================================================
+  // 24. Productivity timer (Quran reading / study / focus)
+  // ===================================================
+  const TIMER_ACTIVITIES = [
+    { id: 'quran', label: 'تلاوة القرآن', icon: 'quran' },
+    { id: 'memorize', label: 'حفظ ومراجعة', icon: 'book' },
+    { id: 'study', label: 'دراسة ومذاكرة', icon: 'star' },
+    { id: 'focus', label: 'تركيز وذكر', icon: 'heart' },
+  ];
+  const TIMER_DURATIONS = [5, 10, 15, 20, 25, 30, 45, 60];
+  const TIMER_RING_CIRC = 2 * Math.PI * 86; // r=86 in the SVG ring markup
+
+  let timerState = {
+    mode: 'countdown',       // 'countdown' | 'stopwatch'
+    activityId: 'quran',
+    durationMin: 15,
+    status: 'idle',          // idle | running | paused
+    elapsedMs: 0,
+    startTs: null,
+    intervalId: null,
+  };
+
+  function timerActivity() {
+    return TIMER_ACTIVITIES.find(a => a.id === timerState.activityId) || TIMER_ACTIVITIES[0];
+  }
+
+  function formatClock(totalSeconds) {
+    const s = Math.max(0, Math.round(totalSeconds));
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  }
+
+  function currentTimerElapsedMs() {
+    if (timerState.status === 'running' && timerState.startTs) {
+      return timerState.elapsedMs + (Date.now() - timerState.startTs);
+    }
+    return timerState.elapsedMs;
+  }
+
+  function updateTimerDisplay() {
+    const timeEl = $('#timerTimeDisplay');
+    if (!timeEl) return;
+    const ring = $('#timerProgressRing');
+    const ringWrap = $('#timerRingWrap');
+    const card = $('#timerCard');
+    const startBtn = $('#timerStartBtn');
+    const finishBtn = $('#timerFinishBtn');
+    const resetBtn = $('#timerResetBtn');
+
+    const elapsed = currentTimerElapsedMs();
+    if (timerState.mode === 'countdown') {
+      const targetMs = timerState.durationMin * 60000;
+      const remainMs = Math.max(0, targetMs - elapsed);
+      timeEl.textContent = formatClock(remainMs / 1000);
+      const pct = targetMs > 0 ? Math.min(1, elapsed / targetMs) : 0;
+      if (ring) ring.style.strokeDashoffset = String(TIMER_RING_CIRC * pct);
+      if (ringWrap) ringWrap.classList.remove('is-stopwatch');
+      if (elapsed >= targetMs && timerState.status === 'running') {
+        finishTimerSession(true);
+        return;
+      }
+    } else {
+      timeEl.textContent = formatClock(elapsed / 1000);
+      if (ringWrap) ringWrap.classList.add('is-stopwatch');
+    }
+
+    if (card) card.classList.toggle('is-running', timerState.status === 'running');
+    if (startBtn) startBtn.textContent = timerState.status === 'running' ? 'إيقاف مؤقت' : (timerState.status === 'paused' ? 'استمرار' : 'ابدأ');
+    if (finishBtn) finishBtn.hidden = timerState.status === 'idle' && elapsed === 0;
+    if (resetBtn) resetBtn.hidden = timerState.status === 'idle' && elapsed === 0;
+  }
+
+  function startOrPauseTimer() {
+    if (timerState.status === 'running') {
+      timerState.elapsedMs += Date.now() - timerState.startTs;
+      timerState.startTs = null;
+      timerState.status = 'paused';
+      clearInterval(timerState.intervalId);
+      timerState.intervalId = null;
+    } else {
+      timerState.startTs = Date.now();
+      timerState.status = 'running';
+      timerState.intervalId = setInterval(updateTimerDisplay, 250);
+    }
+    updateTimerDisplay();
+  }
+
+  function resetTimer() {
+    if (timerState.intervalId) clearInterval(timerState.intervalId);
+    timerState.status = 'idle';
+    timerState.elapsedMs = 0;
+    timerState.startTs = null;
+    timerState.intervalId = null;
+    updateTimerDisplay();
+  }
+
+  // Hard reset used when the user clears all app data
+  function resetTimerHard() {
+    if (timerState.intervalId) clearInterval(timerState.intervalId);
+    timerState = { mode: 'countdown', activityId: 'quran', durationMin: 15, status: 'idle', elapsedMs: 0, startTs: null, intervalId: null };
+  }
+
+  function logTimerSession(minutes) {
+    if (minutes < 1) return; // ignore tiny/accidental sessions
+    const entry = {
+      id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      activity: timerState.activityId,
+      minutes,
+      date: todayKey(),
+      ts: Date.now(),
+    };
+    state.timerSessions.unshift(entry);
+    if (state.timerSessions.length > 300) state.timerSessions.length = 300;
+    saveState('timerSessions');
+  }
+
+  function finishTimerSession(autoCompleted) {
+    const elapsedMs = currentTimerElapsedMs();
+    if (timerState.intervalId) clearInterval(timerState.intervalId);
+    timerState.intervalId = null;
+    const minutes = Math.round(elapsedMs / 60000);
+    logTimerSession(minutes);
+
+    const label = timerActivity().label;
+    if (autoCompleted) {
+      playCompletionSound();
+      vibrate([0, 40, 60, 40]);
+      if (document.visibilityState !== 'visible') {
+        fireReminder('انتهت جلستك 🎉', `أتممت ${minutes} دقيقة من ${label}`);
+      } else {
+        showToast(`🎉 أتممت جلسة ${label} لمدة ${minutes} دقيقة`, 'success', 3200);
+      }
+    } else if (minutes >= 1) {
+      showToast(`تم تسجيل ${minutes} دقيقة من ${label}`, 'success', 2400);
+    }
+
+    timerState.status = 'idle';
+    timerState.elapsedMs = 0;
+    timerState.startTs = null;
+    updateTimerDisplay();
+    renderTimerStats();
+    renderTimerSessions();
+  }
+
+  function renderTimerActivities() {
+    const wrap = $('#timerActivities');
+    if (!wrap) return;
+    wrap.innerHTML = TIMER_ACTIVITIES.map(a => `
+      <button type="button" class="timer-activity-chip${a.id === timerState.activityId ? ' active' : ''}" data-activity="${a.id}">
+        <span aria-hidden="true">${getCatIcon(a.icon)}</span><span>${escapeHtml(a.label)}</span>
+      </button>`).join('');
+    $$('#timerActivities .timer-activity-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (timerState.status === 'running') return; // don't swap activity mid-session
+        timerState.activityId = btn.dataset.activity;
+        $$('#timerActivities .timer-activity-chip').forEach(b => b.classList.toggle('active', b === btn));
+        const labelEl = $('#timerActivityLabel');
+        if (labelEl) labelEl.textContent = timerActivity().label;
+      });
+    });
+  }
+
+  function renderTimerDurations() {
+    const wrap = $('#timerDurations');
+    if (!wrap) return;
+    const chips = TIMER_DURATIONS.map(min => `<button type="button" class="duration-chip${min === timerState.durationMin ? ' active' : ''}" data-duration="${min}">${min}</button>`).join('');
+    wrap.innerHTML = `${chips}<span class="duration-custom-wrap"><input type="number" min="1" max="180" class="duration-custom-input" id="durationCustomInput" placeholder="مخصص" aria-label="مدة مخصصة بالدقائق"> دقيقة</span>`;
+    $$('#timerDurations .duration-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (timerState.status !== 'idle') return;
+        timerState.durationMin = Number(btn.dataset.duration);
+        $$('#timerDurations .duration-chip').forEach(b => b.classList.toggle('active', b === btn));
+        const customInput = $('#durationCustomInput');
+        if (customInput) customInput.value = '';
+        updateTimerDisplay();
+      });
+    });
+    const customInput = $('#durationCustomInput');
+    if (customInput) {
+      customInput.addEventListener('change', () => {
+        if (timerState.status !== 'idle') return;
+        const val = Math.max(1, Math.min(180, Math.round(Number(customInput.value) || 0)));
+        if (!val) return;
+        customInput.value = val;
+        timerState.durationMin = val;
+        $$('#timerDurations .duration-chip').forEach(b => b.classList.toggle('active', Number(b.dataset.duration) === val));
+        updateTimerDisplay();
+      });
+    }
+  }
+
+  function setTimerMode(mode) {
+    if (timerState.status !== 'idle') return; // avoid switching mode mid-session
+    timerState.mode = mode;
+    $$('.timer-mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+    const durationsWrap = $('#timerDurations');
+    if (durationsWrap) durationsWrap.hidden = mode !== 'countdown';
+    updateTimerDisplay();
+  }
+
+  function renderTimerStats() {
+    const wrap = $('#timerInsightCards');
+    if (!wrap) return;
+    const tk = todayKey();
+    const todaySessions = state.timerSessions.filter(s => s.date === tk);
+    const todayMinutes = todaySessions.reduce((sum, s) => sum + s.minutes, 0);
+    const lifetimeMinutes = state.timerSessions.reduce((sum, s) => sum + s.minutes, 0);
+    wrap.innerHTML = `
+      <div class="insight-card">
+        <div class="insight-value">${fmtNum(todayMinutes)}</div>
+        <div class="insight-label">دقيقة تركيز اليوم</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-value">${fmtNum(todaySessions.length)}</div>
+        <div class="insight-label">جلسات اليوم</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-value">${fmtNum(lifetimeMinutes)}</div>
+        <div class="insight-label">إجمالي الدقائق</div>
+      </div>`;
+  }
+
+  function renderTimerSessions() {
+    const list = $('#timerSessionsList');
+    const empty = $('#timerSessionsEmpty');
+    if (!list) return;
+    const recent = state.timerSessions.slice(0, 6);
+    if (recent.length === 0) {
+      list.innerHTML = '';
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    const tk = todayKey();
+    list.innerHTML = recent.map(s => {
+      const act = TIMER_ACTIVITIES.find(a => a.id === s.activity) || TIMER_ACTIVITIES[0];
+      const d = new Date(s.ts);
+      const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      return `<div class="timer-session-item">
+        <span class="timer-session-icon" aria-hidden="true">${getCatIcon(act.icon)}</span>
+        <span class="timer-session-info">
+          <span class="timer-session-activity">${escapeHtml(act.label)}</span>
+          <span class="timer-session-meta">${s.date === tk ? 'اليوم' : s.date} · ${timeStr}</span>
+        </span>
+        <span class="timer-session-minutes">${fmtNum(s.minutes)} د</span>
+      </div>`;
+    }).join('');
+  }
+
+  function renderTimerTab() {
+    renderTimerActivities();
+    renderTimerDurations();
+    const durationsWrap = $('#timerDurations');
+    if (durationsWrap) durationsWrap.hidden = timerState.mode !== 'countdown';
+    const labelEl = $('#timerActivityLabel');
+    if (labelEl) labelEl.textContent = timerActivity().label;
+    updateTimerDisplay();
+    renderTimerStats();
+    renderTimerSessions();
+  }
+
+  function setupTimerTab() {
+    $$('.timer-mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => setTimerMode(tab.dataset.mode));
+    });
+    const startBtn = $('#timerStartBtn');
+    const resetBtn = $('#timerResetBtn');
+    const finishBtn = $('#timerFinishBtn');
+    if (startBtn) startBtn.addEventListener('click', startOrPauseTimer);
+    if (resetBtn) resetBtn.addEventListener('click', resetTimer);
+    if (finishBtn) finishBtn.addEventListener('click', () => finishTimerSession(false));
+  }
+
+  // ===================================================
+  // 25. Mobile sidebar toggle
   // ===================================================
   function setupMobileNav() {
     const toggle = $('#mobileNavToggle');
@@ -2464,7 +2759,7 @@
   }
 
   // ===================================================
-  // 24. Render all (re-render current views)
+  // 26. Render all (re-render current views)
   // ===================================================
   function renderAll() {
     renderHomeView();
@@ -2475,6 +2770,8 @@
       if (viewId === 'view-category' && currentCategoryId) renderCategoryView(currentCategoryId);
       else if (viewId === 'view-favorites') renderFavoritesGrid();
       else if (viewId === 'view-custom') renderCustomGrid();
+      else if (viewId === 'view-timer') renderTimerTab();
+      else if (viewId === 'view-calendar') renderCalendarTab();
       else if (viewId === 'view-search') {
         const q = $('#searchInput').value.trim();
         if (q) runSearch(q);
@@ -2483,7 +2780,7 @@
   }
 
   // ===================================================
-  // 25. Init
+  // 27. Init
   // ===================================================
   function init() {
     loadState();
@@ -2503,19 +2800,18 @@
     setupShareModal();
     setupFontScale();
     setupReminders();
+    setupTimerTab();
+    setupCalendarTab();
 
     renderHomeView();
     updateStats();
     renderBadges();
     updateFavCount();
+    updateHeaderDate();
 
     // Free-form tasbeeh FAB
     const fabFree = $('#freeTasbeehFab');
     if (fabFree) fabFree.addEventListener('click', () => openFocusOverlay(window.FREE_TASBEEH));
-
-    // Update Hijri/Gregorian dates
-    updateDates();
-    startProductivityTick();
 
     // Footer year
     const footerYear = $('#footerYear');
@@ -2540,15 +2836,15 @@
       }
     });
 
-    // Re-check streak and dates when day changes
+    // Re-check streak when day changes
     setInterval(() => {
       const tk = todayKey();
       if (state.daily[tk] && state.streak.lastDay !== tk) {
         updateStreak();
         updateStats();
       }
-      updateDates();
-    }, 30000);
+      updateHeaderDate();
+    }, 60000);
 
     checkBadges();
 
@@ -2559,8 +2855,14 @@
       });
     }
 
-    // Touch handling is done via CSS touch-action: manipulation + click events.
-    // This allows scrolling while preventing double-tap zoom on interactive elements.
+    // NOTE: double-tap-zoom prevention is handled entirely via the CSS
+    // `touch-action: manipulation` rule (see styles.css). We intentionally do
+    // NOT call preventDefault() on touchstart here — doing so on a touch
+    // device suppresses the synthetic mouse/click events Safari & Chrome fire
+    // afterwards (per the touch-events spec), which is why the Tasbeeh
+    // counter, read cards, and category cards previously failed to register
+    // taps on phones, and could also interfere with the browser's own
+    // scroll-gesture detection on touch devices.
   }
 
   // Kick off
