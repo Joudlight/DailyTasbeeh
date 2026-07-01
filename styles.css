@@ -1540,8 +1540,8 @@ html, body { overscroll-behavior-y: contain; }
 /* ---------- Toast ---------- */
 .toast-container {
   position: fixed;
-  inset-block-end: var(--sp-5);
-  inset-inline-start: 50%;
+  bottom: calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  left: 50%;
   transform: translateX(-50%);
   z-index: 300;
   display: flex;
@@ -1550,6 +1550,13 @@ html, body { overscroll-behavior-y: contain; }
   pointer-events: none;
   width: auto;
   max-width: min(90vw, 420px);
+  text-align: center;
+}
+@media (max-width: 480px) {
+  .toast-container {
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 24px);
+  }
 }
 .toast {
   background: var(--surface);

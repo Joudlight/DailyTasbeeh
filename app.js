@@ -64,6 +64,7 @@
   const BADGES_BY_ID = Object.fromEntries(BADGES.map(b => [b.id, b]));
 
   let freeTasbeehIndex = 0;
+  let focusNavContext = { items: null, index: 0 };
 
   let state = {
     counts: {},
@@ -2137,10 +2138,18 @@
     const overlay = $('#focusOverlay');
     if (!overlay) return;
 
-    // Find the index if it's a free tasbeeh option
     const isFree = dhikr.id === 'free_tasbeeh' || (dhikr.id && dhikr.id.startsWith('free_tasbeeh'));
     const freeIdx = window.FREE_TASBEEH_OPTIONS.findIndex(o => o.id === dhikr.id);
-    if (freeIdx >= 0) freeTasbeehIndex = freeIdx;
+    if (freeIdx >= 0) {
+      freeTasbeehIndex = freeIdx;
+      focusNavContext = { items: window.FREE_TASBEEH_OPTIONS, index: freeIdx };
+    } else if (currentCategoryId && window.ADHKAR_DATA[currentCategoryId]) {
+      const items = window.ADHKAR_DATA[currentCategoryId];
+      const idx = items.findIndex(item => item.id === dhikr.id);
+      focusNavContext = { items, index: idx >= 0 ? idx : 0 };
+    } else {
+      focusNavContext = { items: null, index: 0 };
+    }
 
     const c = getCount(dhikr.id);
     const target = dhikr.target;
@@ -2149,6 +2158,9 @@
     const circumference = 2 * Math.PI * 86;
     const dashOffset = circumference * (1 - pct);
     const isCompleted = !isInfinite && c.count >= target;
+
+    const total = focusNavContext.items ? focusNavContext.items.length : 0;
+    const pos = total > 0 ? focusNavContext.index + 1 : 0;
 
     overlay.dataset.dhikrId = dhikr.id;
     overlay.innerHTML = `
@@ -2163,7 +2175,7 @@
         </button>
         <div class="focus-label-wrap">
           ${dhikr.label ? `<span class="dhikr-label focus-tag" lang="ar">${escapeHtml(dhikr.label)}</span>` : ''}
-          <span class="focus-counter-hint">${freeIdx >= 0 ? `${freeIdx + 1} / ${window.FREE_TASBEEH_OPTIONS.length}` : ''}</span>
+          ${total > 1 ? `<span class="focus-counter-hint">${pos} / ${total}</span>` : ''}
         </div>
         <button class="focus-nav-btn" id="focusNextBtn" aria-label="الذكر التالي" title="التالي">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2226,8 +2238,8 @@
     $('#focusCloseBtn').addEventListener('click', closeFocusOverlay);
 
     // Navigation buttons
-    $('#focusPrevBtn').addEventListener('click', () => cycleFreeTasbeeh(-1));
-    $('#focusNextBtn').addEventListener('click', () => cycleFreeTasbeeh(1));
+    $('#focusPrevBtn').addEventListener('click', () => navigateFocus(-1));
+    $('#focusNextBtn').addEventListener('click', () => navigateFocus(1));
 
     overlay.hidden = false;
     requestAnimationFrame(() => overlay.classList.add('show'));
@@ -2235,10 +2247,13 @@
     setTimeout(() => tapEl.focus(), 200);
   }
 
-  function cycleFreeTasbeeh(direction) {
-    const opts = window.FREE_TASBEEH_OPTIONS;
-    freeTasbeehIndex = (freeTasbeehIndex + direction + opts.length) % opts.length;
-    const dhikr = opts[freeTasbeehIndex];
+  function navigateFocus(direction) {
+    if (!focusNavContext.items || focusNavContext.items.length < 2) return;
+    focusNavContext.index = (focusNavContext.index + direction + focusNavContext.items.length) % focusNavContext.items.length;
+    const dhikr = focusNavContext.items[focusNavContext.index];
+    if (focusNavContext.items === window.FREE_TASBEEH_OPTIONS) {
+      freeTasbeehIndex = focusNavContext.index;
+    }
     const overlay = $('#focusOverlay');
     if (overlay && !overlay.hidden) {
       openFocusOverlay(dhikr);
@@ -3219,17 +3234,17 @@
         }
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          cycleFreeTasbeeh(1);
+          navigateFocus(1);
           return;
         }
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          cycleFreeTasbeeh(-1);
+          navigateFocus(-1);
           return;
         }
         if (e.key === ' ' || e.key === 'Enter') {
           e.preventDefault();
-          const dhikr = window.FREE_TASBEEH_OPTIONS[freeTasbeehIndex];
+          const dhikr = focusNavContext.items ? focusNavContext.items[focusNavContext.index] : null;
           if (dhikr) {
             onOverlayTap(dhikr);
           }
@@ -3260,6 +3275,39 @@
     }, 60000);
 
     checkBadges();
+
+    // Back button → navigate to home instead of exiting
+    history.pushState(null, '');
+    window.addEventListener('popstate', () => {
+      const overlay = $('#focusOverlay');
+      if (overlay && !overlay.hidden) {
+        closeFocusOverlay();
+        history.pushState(null, '');
+        return;
+      }
+      const modals = ['#detailModal', '#customModal', '#confirmModal', '#shareModal', '#taskModal', '#taskPreviewModal'];
+      for (const sel of modals) {
+        const el = document.querySelector(sel);
+        if (el && !el.hidden) {
+          closeModal(el);
+          history.pushState(null, '');
+          return;
+        }
+      }
+      const drawer = $('#settingsDrawer');
+      const drawerOverlay = $('#drawerOverlay');
+      if (drawer && drawer.classList.contains('open')) {
+        drawer.classList.remove('open');
+        drawer.setAttribute('aria-hidden', 'true');
+        if (drawerOverlay) { drawerOverlay.classList.remove('show'); setTimeout(() => { drawerOverlay.hidden = true; }, 240); }
+        history.pushState(null, '');
+        return;
+      }
+      if (currentCategoryId) {
+        navigateTo('home');
+        history.pushState(null, '');
+      }
+    });
 
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {
